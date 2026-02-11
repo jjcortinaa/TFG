@@ -210,3 +210,4 @@ __marimo__/
 #Excluded information
 /data
 /models
+/best_models
