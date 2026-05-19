@@ -1,0 +1,28 @@
+# ── TFG: Detección de ELA mediante deep learning sobre ecografía muscular ──
+# Versiones mínimas probadas. Compatibles con Apple Silicon (MPS) y CUDA.
+# Instalación:  python3 -m pip install -r requirements.txt
+
+# Deep learning
+torch>=2.3.0
+torchvision>=0.18.0
+
+# Procesado de imagen y visión clásica
+Pillow>=10.2.0
+opencv-python>=4.9.0
+
+# ML auxiliar (métricas y splits por paciente)
+scikit-learn>=1.4.0
+
+# Datos y cálculo numérico
+numpy>=1.26.0
+scipy>=1.12.0
+
+# Tests estadísticos (McNemar, contingencia)
+statsmodels>=0.14.0
+
+# Visualización
+matplotlib>=3.8.0
+seaborn>=0.13.0
+
+# Utilidades
+tqdm>=4.66.0

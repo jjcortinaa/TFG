@@ -10,6 +10,7 @@ def _get_model_registry():
         "densenet121":     _build_densenet121,
         "efficientnet_b0": _build_efficientnet_b0,
         "mobilenet_v3":    _build_mobilenet_v3,
+        "convnext_tiny":   _build_convnext_tiny,
     }
 
 
@@ -66,6 +67,18 @@ def _build_mobilenet_v3(num_classes):
     model = models.mobilenet_v3_small(weights=models.MobileNet_V3_Small_Weights.IMAGENET1K_V1)
     in_features = model.classifier[3].in_features
     model.classifier[3] = nn.Linear(in_features, num_classes)
+    return model
+
+def _build_convnext_tiny(num_classes):
+    """
+    ConvNeXt-Tiny (Liu et al., 2022). CNN moderna inspirada en Transformers
+    (LayerNorm, GELU, bloques en stages) pero manteniendo el inductive bias
+    convolucional — adecuada para datasets pequeños como este.
+    ~28M parámetros.
+    """
+    model = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
+    in_features = model.classifier[2].in_features
+    model.classifier[2] = nn.Linear(in_features, num_classes)
     return model
 
 

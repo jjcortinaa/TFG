@@ -211,3 +211,20 @@ __marimo__/
 /data
 /models
 /best_models
+/best_models_leaky_backup
+/best_models_kfold
+
+# macOS artifacts
+.DS_Store
+
+# Microsoft Office lock/temp files
+~$*
+*.tmp
+
+# Personal signed documents (no deben subirse al repo público)
+anexo_B*.pdf
+
+# Código legacy conservado fuera del repo
+/_legacy/
+/datos_nuevos/
+/docs/papers_referencia/
