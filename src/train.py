@@ -34,7 +34,7 @@ def train_model(model_name: str, muscle_name: str):
 
     # ReduceLROnPlateau: important for small medical datasets
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode="max", factor=0.5, patience=5, verbose=True
+        optimizer, mode="max", factor=0.5, patience=5
     )
 
     best = {"acc": 0, "sens": 0, "spec": 0, "epoch": 0}

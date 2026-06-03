@@ -94,8 +94,9 @@ AUC_TABLE = {
 
 
 # ── Identificación de paciente normalizada entre músculos ──────────────
-# Mismo paciente puede aparecer como "C001" (Bicep/Antebr/Quadr) o "RC001"
-# (Tibial). Normalizamos al ID común "C001" + clase.
+# Convención de nombrado del dataset (confirmada con el tutor):
+# un mismo paciente control aparece como "C001" en Bicep/Antebrazo/Quadriceps
+# y como "RC001" en Tibial. Aquí normalizamos al ID común "C001" + clase.
 _NUMERIC_RE = re.compile(r"^R?(C?\d+)")
 
 def patient_uid(filename: str, class_name: str) -> str:
@@ -478,9 +479,9 @@ def write_report(arch_rows, champ_rows):
         f.write("por la media de sus imágenes en ese músculo, y fusionamos los 4 músculos\n")
         f.write("con tres reglas (media simple, media ponderada por AUC, voto mayoritario).\n\n")
 
-        f.write("ASUNCIÓN: 'Cnnn' en Bicep/Antebrazo/Quadriceps y 'RCnnn' en Tibial son el\n")
-        f.write("MISMO sujeto control. Esto se ha asumido por convención de nombrado y\n")
-        f.write("debería confirmarse con el dataset original.\n\n")
+        f.write("CONVENCIÓN DE NOMBRADO (confirmada con el tutor): 'Cnnn' en\n")
+        f.write("Bicep/Antebrazo/Quadriceps y 'RCnnn' en Tibial designan al MISMO\n")
+        f.write("sujeto control. El ID se normaliza en patient_uid().\n\n")
 
         def _fmt_ci(lo, hi, suffix="%"):
             if lo is None or hi is None:
