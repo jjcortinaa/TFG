@@ -248,8 +248,23 @@ memoria/*.lot
 memoria/*.bbl
 memoria/*.bbl-SAVE-ERROR
 memoria/*.out
-memoria/*.synctex.gz
+memoria/*.blg
+memoria/*.synctex*
 memoria/*.tex.bak
+
+# Imágenes no referenciadas por TFG_spanish.tex (sobrantes / versiones antiguas):
+memoria/images/_inventario_panels.png
+memoria/images/results_example.png
+memoria/images/train_schema_example.png
+memoria/images/summary_gradcam_4x4.png
+memoria/images/summary_gradcam_selected.png
+memoria/images/plots/boxplot_auc_antebrazo.png
+memoria/images/plots/boxplot_auc_bicep.png
+memoria/images/plots/boxplot_auc_quadriceps.png
+memoria/images/plots/boxplot_auc_tibial.png
+
+# Guía de entrega interna (rutas locales y notas de proceso; no para el repo público)
+/ENTREGA.md
 
 # Plantillas sobrantes del esqueleto de Comillas (NO forman parte de la memoria
 # compilada; la memoria real es memoria/TFG_spanish.tex, que es bilingüe).
