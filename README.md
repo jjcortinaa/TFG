@@ -106,6 +106,21 @@ TFG/
 
 ---
 
+## Pesos entrenados (no incluidos en el repositorio)
+
+Los 100 checkpoints de `best_models_kfold/` (~5,5 GB) no se versionan por tamaño.
+Están disponibles en Google Drive:
+
+**https://drive.google.com/drive/folders/1hDHp9OzT3U6jzT9ogTiLIab_jd5rGU96?usp=drive_link**
+
+Para reproducir la fusión a nivel paciente y los resultados **sin reentrenar**,
+descarga la carpeta y colócala como `best_models_kfold/` en la raíz del proyecto;
+después ejecuta `python3 src/patient_level_fusion.py` (y `python3 src/statistical_tests.py`).
+Alternativamente, todo el experimento puede regenerarse desde cero con
+`python3 src/train_kfold.py` (~6–10 h en Apple Silicon con MPS).
+
+---
+
 ## Dataset
 
 El dataset proviene del centro médico colaborador. Cada sujeto aporta dos
