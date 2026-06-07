@@ -70,11 +70,11 @@ CHAMPIONS = {
 # AUC medio por (modelo, músculo) — para la regla "media ponderada por AUC"
 # Tomado de informe_estadistico.txt sección 1.
 AUC_TABLE = {
-    ("resnet18",        "Bicep"):      88.18,
-    ("resnet50",        "Bicep"):      88.12,
-    ("densenet121",     "Bicep"):      89.77,
-    ("efficientnet_b0", "Bicep"):      86.25,
-    ("convnext_tiny",   "Bicep"):      85.60,
+    ("resnet18",        "Bicep"): 86.25,
+    ("resnet50",        "Bicep"): 86.35,
+    ("densenet121",     "Bicep"): 90.30,
+    ("efficientnet_b0", "Bicep"): 85.86,
+    ("convnext_tiny",   "Bicep"): 86.28,
     ("resnet18",        "Antebrazo"):  91.38,
     ("resnet50",        "Antebrazo"):  89.76,
     ("densenet121",     "Antebrazo"):  88.73,
@@ -489,7 +489,7 @@ def write_report(arch_rows, champ_rows):
             return f"[{lo:>5.1f},{hi:>6.1f}]{suffix}"
 
         f.write("\n1) FUSIÓN POR ARQUITECTURA (cada modelo combina sus 4 músculos)\n")
-        f.write("    n=53 pacientes; IC95% por bootstrap (N=1000) sobre pacientes.\n")
+        f.write("    n=52 pacientes; IC95% por bootstrap (N=1000) sobre pacientes.\n")
         f.write("-"*78 + "\n")
         for r in arch_rows:
             auc = f"{r['auc']:>5.2f}" if r['auc'] is not None else "  -- "

@@ -1,0 +1,37 @@
+[0] Config.pm:328> INFO - This is Biber 2.21
+[0] Config.pm:331> INFO - Logfile is 'TFG_spanish.blg'
+[26] biber-darwin:342> INFO - === Fri Jun  5, 2026, 18:29:50
+[33] Biber.pm:421> INFO - Reading 'TFG_spanish.bcf'
+[69] Biber.pm:1002> INFO - Found 0 citekeys in bib section 0
+[69] Biber.pm:1002> INFO - Found 4 citekeys in bib section 1
+[69] Biber.pm:1002> INFO - Found 0 citekeys in bib section 0
+[69] Biber.pm:1002> INFO - Found 4 citekeys in bib section 2
+[69] Biber.pm:1002> INFO - Found 0 citekeys in bib section 0
+[71] Biber.pm:1002> INFO - Found 39 citekeys in bib section 3
+[71] Biber.pm:1002> INFO - Found 4 citekeys in bib section 0
+[82] Biber.pm:4487> INFO - Processing section 0
+[85] Biber.pm:4678> INFO - Looking for bibtex file 'ref_tfg.bib' for section 0
+[86] bibtex.pm:1713> INFO - LaTeX decoding ...
+[100] bibtex.pm:1519> INFO - Found BibTeX data source 'ref_tfg.bib'
+[134] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'variable = shifted' with 'variable = non-ignorable'
+[134] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[134] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'es-ES'
+[135] Biber.pm:4487> INFO - Processing section 1
+[136] Biber.pm:4678> INFO - Looking for bibtex file 'ref_executive_summary.bib' for section 1
+[136] bibtex.pm:1713> INFO - LaTeX decoding ...
+[138] bibtex.pm:1519> INFO - Found BibTeX data source 'ref_executive_summary.bib'
+[172] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[172] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'variable = shifted' with 'variable = non-ignorable'
+[172] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'es-ES'
+[175] Biber.pm:4487> INFO - Processing section 2
+[176] Biber.pm:4678> INFO - Looking for bibtex file 'ref_executive_summary.bib' for section 2
+[197] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'variable = shifted' with 'variable = non-ignorable'
+[197] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[197] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'es-ES'
+[199] Biber.pm:4487> INFO - Processing section 3
+[199] Biber.pm:4678> INFO - Looking for bibtex file 'ref_tfg.bib' for section 3
+[321] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[321] UCollate.pm:68> INFO - Overriding locale 'es-ES' defaults 'variable = shifted' with 'variable = non-ignorable'
+[321] Biber.pm:4307> INFO - Sorting list 'none/global//global/global/global' of type 'entry' with template 'none' and locale 'es-ES'
+[331] bbl.pm:676> INFO - Writing 'TFG_spanish.bbl' with encoding 'UTF-8'
+[344] bbl.pm:779> INFO - Output to TFG_spanish.bbl

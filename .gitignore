@@ -228,4 +228,34 @@ anexo_B*.pdf
 /_legacy/
 /datos_nuevos/
 /docs/papers_referencia/
-/memoria
+
+# Material con copyright / versiones antiguas (no van al repo público)
+/docs/
+*.docx
+*.pptx
+
+# La memoria (fuente LaTeX + imágenes + PDF) SÍ se publica.
+# Solo se excluyen los artefactos de compilación de LaTeX:
+memoria/*.aux
+memoria/*.bcf
+memoria/*.run.xml
+memoria/*.fdb_latexmk
+memoria/*.fls
+memoria/*.log
+memoria/*.toc
+memoria/*.lof
+memoria/*.lot
+memoria/*.bbl
+memoria/*.bbl-SAVE-ERROR
+memoria/*.out
+memoria/*.synctex.gz
+memoria/*.tex.bak
+
+# Plantillas sobrantes del esqueleto de Comillas (NO forman parte de la memoria
+# compilada; la memoria real es memoria/TFG_spanish.tex, que es bilingüe).
+# El Anexo B real es el PDF firmado, no estas plantillas.
+memoria/TFG_english.tex
+memoria/Annex_I.tex
+memoria/Anexo B.tex
+memoria/Annex B.tex
+memoria/ref_annex_b.bib

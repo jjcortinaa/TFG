@@ -21,29 +21,29 @@ nivel paciente** que fusiona las predicciones de los cuatro músculos.
 
 Sistema final: ResNet-50 entrenado de forma independiente en cada músculo y
 fusionado a nivel paciente mediante media de probabilidades + recalibración con
-*Youden's J*. Métricas con bootstrap de 1000 muestras sobre los 53 pacientes:
+*Youden's J*. Métricas con bootstrap de 1000 muestras sobre los 52 pacientes:
 
 | Métrica       | Valor       | IC95 % (bootstrap)        |
 |---------------|-------------|---------------------------|
-| AUC           | 99.15 %     | (ver `informe_fusion.txt`) |
-| Accuracy      | 98.11 %     | "                          |
-| Sensibilidad  | 96.30 %     | "                          |
-| Especificidad | 100.00 %    | "                          |
-| Confusión     | 26 TP / 26 TN / 0 FP / 1 FN |               |
+| AUC           | 98.67 %     | (ver `informe_fusion.txt`) |
+| Accuracy      | 96.15 %     | "                          |
+| Sensibilidad  | 100.00 %    | "                          |
+| Especificidad | 92.31 %     | "                          |
+| Confusión     | 26 TP / 24 TN / 2 FP / 0 FN |               |
 
 Comparación con la línea base clínica (Martínez-Payá 2017, métricas a nivel
 imagen; nuestras métricas son a nivel paciente):
 
 | Métrica (media 4 músculos) | Martínez-Payá 2017 | Sistema final |
 |----------------------------|--------------------|---------------|
-| AUC                        | ≈94 %              | **99.15 %**   |
-| Sensibilidad               | ≈87 %              | **96.30 %**   |
-| Especificidad              | ≈87 %              | **100 %**     |
+| AUC                        | ≈94 %              | **98.67 %**   |
+| Sensibilidad               | ≈87 %              | **100 %**     |
+| Especificidad              | ≈87 %              | **92.31 %**   |
 
 A nivel músculo, los IC95 % t-Student de las cinco arquitecturas se solapan con
 el AUC publicado por Martínez-Payá en los cuatro músculos
 (*equivalente / no concluyente*), lo que es consistente con un *n* moderado
-(53 pacientes) y respalda que la mejora real proviene de la integración
+(52 pacientes) y respalda que la aportación real proviene de la integración
 multi-músculo a nivel paciente.
 
 ---
@@ -63,7 +63,8 @@ TFG/
 │   ├── evaluate_saved.py               Evaluación + métricas + gráficas (split simple)
 │   ├── statistical_tests.py            IC t-Student, vs baseline, recalibración Youden, Wilcoxon/DeLong/McNemar
 │   ├── patient_level_fusion.py         Fusión OOF multi-músculo a nivel paciente + bootstrap IC95 %
-│   └── explainability.py               Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
+│   ├── explainability.py               Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
+│   └── make_figuras_memoria.py         Regenera las figuras de la memoria (matriz de confusión, boxplots, ROC)
 │
 ├── data/
 │   ├── classified_data/                Imágenes originales (.tif) facilitadas por el centro
@@ -132,7 +133,8 @@ con distinta convención de adquisición.
 | Quadriceps  | 52      | 52  | 104            | 52             |
 | Tibial      | 52      | 52  | 104            | 52             |
 
-Total: **53 pacientes únicos** (27 ELA + 26 Control), cada uno con sus 4 músculos.
+Total: **52 pacientes únicos** (26 ELA + 26 Control), cada uno con sus 4 músculos
+(2 imágenes por músculo: lados derecho e izquierdo).
 
 ---
 
@@ -199,11 +201,14 @@ motivos de capacidad y redundancia respectivamente.
 - Tres reglas de fusión multi-músculo: media simple, media ponderada por
   AUC del músculo, voto mayoritario.
 - Recalibración con Youden sobre la probabilidad fusionada.
-- IC95 % por bootstrap (N=1000) sobre los 53 pacientes para Acc/Sens/Spec/AUC.
+- IC95 % por bootstrap (N=1000) sobre los 52 pacientes para Acc/Sens/Spec/AUC.
 - Se reporta por arquitectura **y** una variante "campeones por músculo"
-  (mejor modelo de cada músculo). El sistema final descarta esta variante
-  porque mezclar arquitecturas distintas descalibra las probabilidades en
-  la fusión y rinde peor que ResNet-50 aplicado uniformemente.
+  (mejor modelo de cada músculo). La variante de campeones rinde de forma
+  estadísticamente equivalente a las arquitecturas únicas (los AUC fusionados
+  caen en intervalos de confianza solapados); el sistema final emplea una sola
+  arquitectura (ResNet-50) por simplicidad operativa y mantenibilidad, no por
+  una ventaja de AUC, y por ofrecer sensibilidad del 100 % (ningún ELA sin
+  detectar).
 
 ### Explicabilidad (`explainability.py`)
 Cuatro técnicas sobre ResNet-50 (sistema final), usando los pesos del fold
@@ -275,6 +280,10 @@ python3 patient_level_fusion.py
 
 # 6) Mapas de explicabilidad (ResNet-50, los 4 músculos)
 python3 explainability.py
+
+# 7) Regenerar las figuras de la memoria desde los resultados
+#    (matriz de confusión, boxplots de AUC y curvas ROC)
+python3 make_figuras_memoria.py
 ```
 
 La fase exploratoria (split 80/20 + `evaluate_saved.py`) se mantiene en el
