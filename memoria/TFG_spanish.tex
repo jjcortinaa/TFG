@@ -221,15 +221,6 @@
 
 \ComillasTitlePage
 
-\blankpage
-
-{\fontsize{17}{20}\selectfont
-    \begin{center}
-        {\large Agradecimientos}
-    \end{center}
-    Esta sección es opcional
-}
-
 \newpage
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -509,7 +500,7 @@ The main contribution of this work is the multi-muscle integration at the patien
 \begin{refsection}[ref_tfg.bib]
 \section{Introducci\'on}
 
-La Esclerosis Lateral Amiotr\'ofica (ELA) es una enfermedad neurodegenerativa caracterizada por la degeneraci\'on progresiva de las motoneuronas superior e inferior, que conduce a debilidad muscular, atrofia y, finalmente, fallo respiratorio \cite{brown2017als, hardiman2017als}. Se trata de una patolog\'ia de pron\'ostico fatal, con una supervivencia mediana de entre tres y cinco a\~nos desde la aparici\'on de los primeros s\'intomas. En Europa, su incidencia anual se estima entre 2 y 3 casos por cada 100.000 habitantes \cite{logroscino2010incidence}.
+La Esclerosis Lateral Amiotr\'ofica (ELA) es una enfermedad neurodegenerativa caracterizada por la degeneraci\'on progresiva de las motoneuronas superior e inferior, que conduce a debilidad muscular, atrofia y, finalmente, fallo respiratorio \cite{brown2017als, hardiman2017als}. Se trata de una patolog\'ia de pron\'ostico fatal, con una supervivencia mediana de entre tres y cinco a\~nos desde la aparici\'on de los primeros s\'intomas. En Europa, su incidencia anual se estima en torno a 2 casos por cada 100.000 habitantes \cite{logroscino2010incidence}.
 
 En ausencia de un biomarcador diagn\'ostico espec\'ifico, el diagn\'ostico de la ELA se apoya en los criterios de El Escorial \cite{brooks2000escorial}, que combinan la exploraci\'on cl\'inica con la electromiograf\'ia. Este procedimiento conlleva un retraso medio cercano a los doce meses entre los primeros s\'intomas y el diagn\'ostico definitivo, una ventana temporal cr\'itica en la que la intervenci\'on terap\'eutica podr\'ia tener un mayor impacto. En este contexto, la ecograf\'ia muscular cuantitativa ha emergido como una t\'ecnica de imagen no invasiva, accesible y de bajo coste, capaz de detectar los cambios estructurales que la enfermedad provoca en el tejido muscular \cite{pillen2008muscle, martinezpaya2017quantitative}.
 
@@ -553,7 +544,7 @@ Este capítulo revisa el conocimiento previo sobre el que se construye el proyec
 
 \subsection{La Esclerosis Lateral Amiotrófica}\label{subsec:ela}
 
-La Esclerosis Lateral Amiotrófica (ELA) es una enfermedad neurodegenerativa caracterizada por la pérdida progresiva de las motoneuronas superiores e inferiores, lo que provoca debilidad muscular, atrofia y, en última instancia, parálisis y fallo respiratorio \cite{brown2017als,hardiman2017als}. Su incidencia anual en las poblaciones europeas se estima entre 2 y 3 casos por cada 100.000 habitantes, y la supervivencia mediana desde el inicio de los síntomas es de tres a cinco años \cite{logroscino2010incidence,hardiman2017als}.
+La Esclerosis Lateral Amiotrófica (ELA) es una enfermedad neurodegenerativa caracterizada por la pérdida progresiva de las motoneuronas superiores e inferiores, lo que provoca debilidad muscular, atrofia y, en última instancia, parálisis y fallo respiratorio \cite{brown2017als,hardiman2017als}. Su incidencia anual en las poblaciones europeas se estima en torno a 2 casos por cada 100.000 habitantes, y la supervivencia mediana desde el inicio de los síntomas es de tres a cinco años \cite{logroscino2010incidence,hardiman2017als}.
 
 El diagnóstico de la ELA es eminentemente clínico y se apoya en los criterios de El Escorial y sus revisiones posteriores, que combinan la exploración neurológica con estudios electrofisiológicos para confirmar la afectación de la motoneurona en distintas regiones corporales \cite{brooks2000escorial}. Estos criterios fueron concebidos con fines de investigación y exigen una afectación ya extendida, por lo que su sensibilidad en las fases iniciales es limitada. En la práctica clínica esto se traduce en un retraso diagnóstico medio de entre diez y dieciséis meses desde la aparición de los primeros síntomas \cite{hardiman2017als}. Dado que el deterioro neuronal es irreversible y que las terapias disponibles son más eficaces cuanto antes se instauran, reducir ese retraso constituye una necesidad clínica de primer orden y motiva la búsqueda de marcadores objetivos, accesibles y no invasivos que apoyen la sospecha diagnóstica.
 
@@ -588,7 +579,7 @@ A lo largo de la última década se han propuesto sucesivas arquitecturas de CNN
 \midrule
 ResNet-18       & 2016 & $\sim$11~M & Conexiones residuales (\textit{skip connections}) \\
 ResNet-50       & 2016 & $\sim$26~M & ResNet con bloques \textit{bottleneck} más profundos \\
-DenseNet-121    & 2017 & $\sim$7~M  & Concatenación densa entre capas \\
+DenseNet-121    & 2017 & $\sim$8~M  & Concatenación densa entre capas \\
 EfficientNet-B0 & 2019 & $\sim$5~M  & Escalado balanceado profundidad/anchura/resolución \\
 ConvNeXt-Tiny   & 2022 & $\sim$28~M & CNN moderna inspirada en \textit{vision transformers} \\
 \bottomrule
@@ -597,7 +588,7 @@ ConvNeXt-Tiny   & 2022 & $\sim$28~M & CNN moderna inspirada en \textit{vision tr
 
 \textbf{ResNet} \cite{he2016deep} (\textit{residual networks}) resolvió uno de los problemas centrales del entrenamiento de redes profundas: a partir de cierta profundidad, añadir capas dejaba de mejorar el rendimiento y, paradójicamente, lo empeoraba. La causa no era el sobreajuste, sino una dificultad de optimización: los gradientes se atenuaban antes de llegar a las capas iniciales. La solución propuesta consiste en añadir conexiones de salto (\textit{skip connections}) que cortocircuitan dos o tres capas, de modo que cada bloque aprende un residuo $\Delta x = F(x)$ en lugar de la representación completa $H(x) = x + F(x)$. Esta reformulación facilita el aprendizaje de la identidad como punto de partida y permite entrenar redes de cientos de capas. Las variantes ResNet-18 y ResNet-50 se diferencian en el número de bloques y, sobre todo, en su tipo: la primera utiliza bloques sencillos con dos convoluciones $3\times 3$, mientras que la segunda usa bloques \textit{bottleneck} con tres convoluciones ($1\times 1$, $3\times 3$, $1\times 1$) que reducen y restauran la dimensionalidad de los canales, ahorrando cómputo. ResNet-50 es históricamente la línea base de referencia para experimentos de \textit{transfer learning} sobre ImageNet, y por eso se ha incluido en este trabajo.
 
-\textbf{DenseNet} \cite{huang2017densely} llevó la idea de las conexiones de salto a un extremo: en lugar de saltar dos o tres capas, cada capa recibe como entrada la concatenación de las salidas de \textit{todas} las capas anteriores dentro del mismo \textit{dense block}. Esta conectividad densa cumple tres funciones simultáneas: refuerza la propagación de las características, mitiga el problema de los gradientes y reduce drásticamente el número de parámetros necesarios, porque las capas profundas no necesitan re-aprender las características ya extraídas por capas previas. DenseNet-121 logra rendimientos comparables a ResNet-50 con apenas siete millones de parámetros, una característica deseable en escenarios de pocos datos donde el riesgo de sobreajuste es elevado.
+\textbf{DenseNet} \cite{huang2017densely} llevó la idea de las conexiones de salto a un extremo: en lugar de saltar dos o tres capas, cada capa recibe como entrada la concatenación de las salidas de \textit{todas} las capas anteriores dentro del mismo \textit{dense block}. Esta conectividad densa cumple tres funciones simultáneas: refuerza la propagación de las características, mitiga el problema de los gradientes y reduce drásticamente el número de parámetros necesarios, porque las capas profundas no necesitan re-aprender las características ya extraídas por capas previas. DenseNet-121 logra rendimientos comparables a ResNet-50 con unos ocho millones de parámetros, una característica deseable en escenarios de pocos datos donde el riesgo de sobreajuste es elevado.
 
 \textbf{EfficientNet} \cite{tan2019efficientnet} introduce una idea distinta: en lugar de proponer una arquitectura concreta, los autores formulan un \textit{compound scaling} que escala simultáneamente la profundidad, la anchura y la resolución de entrada de la red con un único coeficiente. La intuición es que escalar una sola de las tres dimensiones, como había sido habitual, no aprovecha de forma óptima el presupuesto computacional. EfficientNet-B0 es la red base del escalado, optimizada mediante \textit{neural architecture search}. Con cinco millones de parámetros, ofrece una eficiencia notable: alcanza precisiones equivalentes a redes mucho más grandes con una fracción del cómputo, lo que la convierte en una alternativa interesante cuando el conjunto de datos es modesto.
 
@@ -1202,7 +1193,7 @@ Versiones (mínimas) & \texttt{torch}$\geq$2.3, \texttt{torchvision}$\geq$0.18, 
 }
 \end{table}
 
-Las cinco arquitecturas comparadas son las siguientes, todas inicializadas con los pesos preentrenados sobre ImageNet de \texttt{torchvision}: ResNet-18 ($\sim$11~M parámetros), ResNet-50 ($\sim$26~M), DenseNet-121 ($\sim$7~M), EfficientNet-B0 ($\sim$5~M) y ConvNeXt-Tiny ($\sim$28~M). En todas ellas se reemplaza la última capa lineal por una nueva con dos salidas. Se descartan deliberadamente VGG-16 (por su número excesivo de parámetros, $\sim$138~M, propenso al sobreajuste sobre el conjunto disponible) y MobileNet-V3 Small (por resultar redundante con EfficientNet-B0 en el rol de arquitectura moderna y eficiente).
+Las cinco arquitecturas comparadas son las siguientes, todas inicializadas con los pesos preentrenados sobre ImageNet de \texttt{torchvision}: ResNet-18 ($\sim$11~M parámetros), ResNet-50 ($\sim$26~M), DenseNet-121 ($\sim$8~M), EfficientNet-B0 ($\sim$5~M) y ConvNeXt-Tiny ($\sim$28~M). En todas ellas se reemplaza la última capa lineal por una nueva con dos salidas. Se descartan deliberadamente VGG-16 (por su número excesivo de parámetros, $\sim$138~M, propenso al sobreajuste sobre el conjunto disponible) y MobileNet-V3 Small (por resultar redundante con EfficientNet-B0 en el rol de arquitectura moderna y eficiente).
 
 \subsection{Comparaciones estadísticas pareadas completas}\label{subsec:anexo-pares}
 
