@@ -52,57 +52,43 @@ multi-músculo a nivel paciente.
 
 ```
 TFG/
-├── src/                                Código fuente
-│   ├── config.py                       Configuración global (rutas, seeds, hiperparámetros)
-│   ├── preprocessing.py                TIFF → JPG 224×224
-│   ├── organise_data.py                Reorganización por músculo
-│   ├── dataset.py                      Dataloaders con split POR PACIENTE + StratifiedGroupKFold
-│   ├── models.py                       Factory de las 5 arquitecturas
-│   ├── train.py                        Entrenamiento simple (split 80/20) — fase exploratoria
-│   ├── train_kfold.py                  Entrenamiento con 5-fold StratifiedGroupKFold
-│   ├── evaluate_saved.py               Evaluación + métricas + gráficas (split simple)
-│   ├── statistical_tests.py            IC t-Student, vs baseline, recalibración Youden, Wilcoxon/DeLong/McNemar
-│   ├── patient_level_fusion.py         Fusión OOF multi-músculo a nivel paciente + bootstrap IC95 %
-│   ├── explainability.py               Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
-│   └── make_figuras_memoria.py         Regenera las figuras de la memoria (matriz de confusión, boxplots, ROC)
+├── src/                              Código fuente (12 módulos)
+│   ├── config.py                     Configuración global (rutas, semillas, hiperparámetros)
+│   ├── preprocessing.py              TIFF → JPG 224×224
+│   ├── organise_data.py              Organización de las imágenes por músculo
+│   ├── dataset.py                    Dataloaders con split POR PACIENTE + StratifiedGroupKFold
+│   ├── models.py                     Factoría de las 5 arquitecturas
+│   ├── train.py                      Entrenamiento simple 80/20 (fase exploratoria)
+│   ├── train_kfold.py                Entrenamiento con 5-fold StratifiedGroupKFold
+│   ├── evaluate_saved.py             Evaluación del split simple (fase exploratoria)
+│   ├── statistical_tests.py          IC, vs baseline, Youden, Wilcoxon/DeLong/McNemar
+│   ├── patient_level_fusion.py       Fusión OOF multi-músculo a nivel paciente + bootstrap
+│   ├── explainability.py             Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
+│   └── make_figuras_memoria.py       Regenera las figuras de resultados de la memoria
 │
-├── data/
-│   ├── classified_data/                Imágenes originales (.tif) facilitadas por el centro
-│   └── processed/                      Dataset listo para entrenar (JPG 224×224)
-│       ├── Bicep/
-│       ├── Antebrazo/
-│       ├── Quadriceps/
-│       └── Tibial/
+├── memoria/                          Fuente LaTeX de la memoria
+│   ├── TFG_spanish.tex               Documento principal (bilingüe ES/EN)
+│   ├── Anexo_I.tex                   Declaración de autoría
+│   ├── ref_tfg.bib                   Bibliografía principal
+│   ├── ref_executive_summary.bib     Bibliografía del resumen ejecutivo
+│   ├── images/                       Figuras (matriz de confusión, boxplots, ROC, Grad-CAM, logos)
+│   ├── .latexmkrc, compilar.command, COMO_COMPILAR.md   Ayudas de compilación
+│   └── TFG_spanish.pdf               Memoria compilada
 │
-├── best_models_kfold/                  Pesos (.pth) de los 100 modelos del CV (5×4×5)
-├── best_models/                        Pesos del split 80/20 (fase exploratoria)
-├── best_models_leaky_backup/           Backup de la versión inicial con leakage por paciente
-│
-├── models/resultados_kfold/            Salidas del experimento principal
-│   ├── kfold_predictions.json          Predicciones por fold de cada (modelo, músculo)
-│   ├── kfold_summary.csv               Media ± std por (modelo, músculo)
-│   ├── ci_bootstrap.csv                IC95 % t-Student y bootstrap por (modelo, músculo)
-│   ├── vs_baseline.csv                 Veredicto vs Martínez-Payá 2017
-│   ├── recalibrated_youden.csv         Sens/Spec con umbral óptimo por fold
-│   ├── pairwise_models.csv             Wilcoxon / DeLong / McNemar entre arquitecturas
-│   ├── informe_estadistico.txt         Informe legible de los tests
-│   ├── oof_predictions.json            Predicciones out-of-fold con paciente_id
-│   ├── fusion_per_architecture.csv     Fusión multi-músculo por arquitectura
-│   ├── fusion_champions.csv            Fusión "campeones por músculo"
-│   ├── informe_fusion.txt              Informe legible de la fusión paciente
-│   ├── plots/
-│   │   └── boxplot_auc_<musculo>.png   Boxplots por músculo
-│   └── explainability_resnet50/
-│       ├── gradcam/                    Grad-CAM por músculo, ELA y Control
-│       ├── guided_gradcam/
-│       ├── saliency/
-│       ├── occlusion/
-│       └── summary_gradcam_4x4.png     Figura resumen 4×4
-│
-├── docs/                               Memoria, papers de referencia (Martínez-Payá 2017, 2018)
+├── .vscode/                          Configuración de LaTeX Workshop (para revisores)
+├── TFG_spanish.pdf                   Memoria compilada (copia en la raíz)
+├── README.md
 ├── requirements.txt
-└── README.md
+└── .gitignore
 ```
+
+> **Qué NO se incluye en este repositorio** (excluido por `.gitignore`):
+> - **Datos de pacientes** (`data/`): propiedad del centro médico colaborador, no redistribuibles.
+> - **Pesos entrenados** (`best_models_kfold/`, ~5,5 GB): disponibles en Google Drive (ver la sección «Pesos entrenados» más abajo).
+> - **Resultados intermedios** (`models/resultados_kfold/`: predicciones, OOF, CSV de fusión e informes).
+> - **Artículos de referencia** (`docs/`): por derechos de autor.
+>
+> El paquete completo y autocontenido para reproducir el trabajo sin reentrenar (código + `data/processed/` + resultados + memoria) se entrega por separado al tribunal en un ZIP.
 
 ---
 
