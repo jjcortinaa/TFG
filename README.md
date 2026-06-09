@@ -1,252 +1,249 @@
-# TFG — Detección de ELA mediante deep learning sobre ecografía muscular
+# Bachelor's Thesis — ALS detection via deep learning on muscle ultrasound
 
-Sistema de clasificación automática (control sano vs. paciente con esclerosis
-lateral amiotrófica, ELA) a partir de imágenes de ecografía muscular usando
-redes neuronales convolucionales con *transfer learning* sobre ImageNet.
+Automatic classification system (healthy control vs. patient with amyotrophic
+lateral sclerosis, ALS) from muscle ultrasound images, using convolutional
+neural networks with *transfer learning* on ImageNet.
 
-El trabajo compara cinco arquitecturas (ResNet-18, ResNet-50, DenseNet-121,
-EfficientNet-B0 y ConvNeXt-Tiny) en cuatro grupos musculares (bíceps braquial,
-flexor del carpo, cuádriceps y tibial anterior), valida los resultados mediante
-5-fold *Stratified Group K-Fold* y los compara estadísticamente contra la
-línea base clínica de Martínez-Payá y col. (2017) basada en análisis textural
-GLCM. Como aportación principal, se construye un **sistema de decisión a
-nivel paciente** que fusiona las predicciones de los cuatro músculos.
+The work compares five architectures (ResNet-18, ResNet-50, DenseNet-121,
+EfficientNet-B0 and ConvNeXt-Tiny) on four muscle groups (biceps brachii,
+forearm flexors, quadriceps and tibialis anterior), validates the results with
+5-fold *Stratified Group K-Fold* and compares them statistically against the
+clinical baseline of Martinez-Paya et al. (2017) based on GLCM textural
+analysis. As the main contribution, a **patient-level decision system** is
+built that fuses the predictions of the four muscles.
 
-**Autor:** Jose Juan Cortina
-**Grado:** IMAT — Ingeniería Matemática
+**Author:** Jose Juan Cortina
+**Degree:** IMAT — Mathematical Engineering and Artificial Intelligence
 
 ---
 
-## Resumen de resultados
+## Results summary
 
-Sistema final: ResNet-50 entrenado de forma independiente en cada músculo y
-fusionado a nivel paciente mediante media de probabilidades + recalibración con
-*Youden's J*. Métricas con bootstrap de 1000 muestras sobre los 52 pacientes:
+Final system: ResNet-50 trained independently on each muscle and fused at the
+patient level by averaging probabilities + recalibration with *Youden's J*.
+Metrics with a 1000-sample bootstrap over the 52 patients:
 
-| Métrica       | Valor       | IC95 % (bootstrap)        |
+| Metric        | Value       | 95% CI (bootstrap)        |
 |---------------|-------------|---------------------------|
-| AUC           | 98.67 %     | (ver `informe_fusion.txt`) |
+| AUC           | 98.67 %     | (see `informe_fusion.txt`) |
 | Accuracy      | 96.15 %     | "                          |
-| Sensibilidad  | 100.00 %    | "                          |
-| Especificidad | 92.31 %     | "                          |
-| Confusión     | 26 TP / 24 TN / 2 FP / 0 FN |               |
+| Sensitivity   | 100.00 %    | "                          |
+| Specificity   | 92.31 %     | "                          |
+| Confusion     | 26 TP / 24 TN / 2 FP / 0 FN |               |
 
-Comparación con la línea base clínica (Martínez-Payá 2017, métricas a nivel
-imagen; nuestras métricas son a nivel paciente):
+Comparison with the clinical baseline (Martinez-Paya 2017, image-level metrics;
+our metrics are patient-level):
 
-| Métrica (media 4 músculos) | Martínez-Payá 2017 | Sistema final |
+| Metric (mean of 4 muscles) | Martinez-Paya 2017 | Final system  |
 |----------------------------|--------------------|---------------|
 | AUC                        | ≈94 %              | **98.67 %**   |
-| Sensibilidad               | ≈87 %              | **100 %**     |
-| Especificidad              | ≈87 %              | **92.31 %**   |
+| Sensitivity                | ≈87 %              | **100 %**     |
+| Specificity                | ≈87 %              | **92.31 %**   |
 
-A nivel músculo, los IC95 % t-Student de las cinco arquitecturas se solapan con
-el AUC publicado por Martínez-Payá en los cuatro músculos
-(*equivalente / no concluyente*), lo que es consistente con un *n* moderado
-(52 pacientes) y respalda que la aportación real proviene de la integración
-multi-músculo a nivel paciente.
+At the muscle level, the t-Student 95% CIs of the five architectures overlap
+with the AUC published by Martinez-Paya in all four muscles
+(*equivalent / inconclusive*), which is consistent with a moderate *n*
+(52 patients) and supports that the real contribution comes from the
+multi-muscle integration at the patient level.
 
 ---
 
-## Estructura del repositorio
+## Repository structure
 
 ```
 TFG/
-├── src/                              Código fuente (12 módulos)
-│   ├── config.py                     Configuración global (rutas, semillas, hiperparámetros)
+├── src/                              Source code (12 modules)
+│   ├── config.py                     Global configuration (paths, seeds, hyperparameters)
 │   ├── preprocessing.py              TIFF → JPG 224×224
-│   ├── organise_data.py              Organización de las imágenes por músculo
-│   ├── dataset.py                    Dataloaders con split POR PACIENTE + StratifiedGroupKFold
-│   ├── models.py                     Factoría de las 5 arquitecturas
-│   ├── train.py                      Entrenamiento simple 80/20 (fase exploratoria)
-│   ├── train_kfold.py                Entrenamiento con 5-fold StratifiedGroupKFold
-│   ├── evaluate_saved.py             Evaluación del split simple (fase exploratoria)
-│   ├── statistical_tests.py          IC, vs baseline, Youden, Wilcoxon/DeLong/McNemar
-│   ├── patient_level_fusion.py       Fusión OOF multi-músculo a nivel paciente + bootstrap
+│   ├── organise_data.py              Organisation of the images by muscle
+│   ├── dataset.py                    Dataloaders with PER-PATIENT split + StratifiedGroupKFold
+│   ├── models.py                     Factory of the 5 architectures
+│   ├── train.py                      Simple 80/20 training (exploratory phase)
+│   ├── train_kfold.py                Training with 5-fold StratifiedGroupKFold
+│   ├── evaluate_saved.py             Evaluation of the simple split (exploratory phase)
+│   ├── statistical_tests.py          CI, vs baseline, Youden, Wilcoxon/DeLong/McNemar
+│   ├── patient_level_fusion.py       Multi-muscle OOF fusion at patient level + bootstrap
 │   ├── explainability.py             Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
-│   └── create_figures.py            Regenera las figuras de resultados de la memoria
+│   └── create_figures.py            Regenerates the thesis result figures
 │
-├── memoria/                          Fuente LaTeX de la memoria
-│   ├── TFG_spanish.tex               Documento principal (bilingüe ES/EN)
-│   ├── Anexo_I.tex                   Declaración de autoría
-│   ├── ref_tfg.bib                   Bibliografía principal
-│   ├── ref_executive_summary.bib     Bibliografía del resumen ejecutivo
-│   ├── images/                       Figuras (matriz de confusión, boxplots, ROC, Grad-CAM, logos)
-│   ├── .latexmkrc                    Configuración de compilación (latexmk + biber)
-│   └── TFG_spanish.pdf               Memoria compilada
+├── memoria/                          LaTeX source of the thesis
+│   ├── TFG_spanish.tex               Main document (bilingual ES/EN)
+│   ├── Anexo_I.tex                   Authorship declaration
+│   ├── ref_tfg.bib                   Main bibliography
+│   ├── ref_executive_summary.bib     Executive-summary bibliography
+│   ├── images/                       Figures (confusion matrix, boxplots, ROC, Grad-CAM, logos)
+│   ├── .latexmkrc                    Build configuration (latexmk + biber)
+│   └── TFG_spanish.pdf               Compiled thesis
 │
-├── .vscode/                          Configuración de LaTeX Workshop (para revisores)
-├── TFG_spanish.pdf                   Memoria compilada (copia en la raíz)
+├── .vscode/                          LaTeX Workshop configuration (for reviewers)
+├── TFG_spanish.pdf                   Compiled thesis (copy at the root)
 ├── README.md
 ├── requirements.txt
 └── .gitignore
 ```
 
-> **Qué NO se incluye en este repositorio** (excluido por `.gitignore`):
-> - **Datos de pacientes** (`data/`): propiedad del centro médico colaborador, no redistribuibles.
-> - **Pesos entrenados** (`best_models_kfold/`, ~5,5 GB): disponibles en Google Drive (ver la sección «Pesos entrenados» más abajo).
-> - **Resultados intermedios** (`models/resultados_kfold/`: predicciones, OOF, CSV de fusión e informes).
-> - **Artículos de referencia** (`docs/`): por derechos de autor.
+> **What is NOT included in this repository** (excluded via `.gitignore`):
+> - **Patient data** (`data/`): property of the collaborating medical centre, not redistributable.
+> - **Trained weights** (`best_models_kfold/`, ~5.5 GB): available on Google Drive (see the "Trained weights" section below).
+> - **Intermediate results** (`models/resultados_kfold/`: predictions, OOF, fusion CSVs and reports).
+> - **Reference papers** (`docs/`): due to copyright.
 >
-> El paquete completo y autocontenido para reproducir el trabajo sin reentrenar (código + `data/processed/` + resultados + memoria) se entrega por separado al tribunal en un ZIP.
+> The complete, self-contained package to reproduce the work without retraining
+> (code + `data/processed/` + results + thesis) is delivered separately to the
+> examining committee as a ZIP.
 
 ---
 
-## Pesos entrenados (no incluidos en el repositorio)
+## Trained weights (not included in the repository)
 
-Los 100 checkpoints de `best_models_kfold/` (~5,5 GB) no se versionan por tamaño.
-Están disponibles en Google Drive:
+The 100 checkpoints in `best_models_kfold/` (~5.5 GB) are not versioned due to
+their size. They are available on Google Drive:
 
 **https://drive.google.com/drive/folders/1hDHp9OzT3U6jzT9ogTiLIab_jd5rGU96?usp=drive_link**
 
-Para reproducir la fusión a nivel paciente y los resultados **sin reentrenar**,
-descarga la carpeta y colócala como `best_models_kfold/` en la raíz del proyecto;
-después ejecuta `python3 src/patient_level_fusion.py` (y `python3 src/statistical_tests.py`).
-Alternativamente, todo el experimento puede regenerarse desde cero con
-`python3 src/train_kfold.py` (~6–10 h en Apple Silicon con MPS).
+To reproduce the patient-level fusion and the results **without retraining**,
+download the folder and place it as `best_models_kfold/` at the project root;
+then run `python3 src/patient_level_fusion.py` (and `python3 src/statistical_tests.py`).
+Alternatively, the whole experiment can be regenerated from scratch with
+`python3 src/train_kfold.py` (~6–10 h on Apple Silicon with MPS).
 
 ---
 
 ## Dataset
 
-El dataset proviene del centro médico colaborador. Cada sujeto aporta dos
-imágenes por músculo correspondientes a las lateralidades derecha (`d`) e
-izquierda (`i`). Las imágenes son **ROIs** ya recortadas por el centro (no
-incluyen piel, hueso ni anotaciones del ecógrafo).
+The dataset comes from the collaborating medical centre. Each subject provides
+two images per muscle, corresponding to the right (`d`) and left (`i`) sides.
+The images are **ROIs** already cropped by the centre (they do not include
+skin, bone or ultrasound-scanner annotations).
 
-**Nomenclatura:**
+**Naming:**
 
 ```
-{ID_paciente}{d|i}_{Músculo}_clean.jpg
+{patient_ID}{d|i}_{Muscle}_clean.jpg
 ```
 
-Ejemplos: `C001d_BBr_clean.jpg`, `1001i_Cdr_clean.jpg`, `RC001d_TbA_clean.jpg`.
-Los controles aparecen como `Cnnn` en los conjuntos de Bicep / Antebrazo /
-Quadriceps y como `RCnnn` en Tibial: ambos prefijos refieren al mismo paciente
-con distinta convención de adquisición.
+Examples: `C001d_BBr_clean.jpg`, `1001i_Cdr_clean.jpg`, `RC001d_TbA_clean.jpg`.
+Controls appear as `Cnnn` in the Bicep / Antebrazo / Quadriceps sets and as
+`RCnnn` in Tibial: both prefixes refer to the same patient under a different
+acquisition convention.
 
-**Composición:**
+**Composition:**
 
-| Músculo     | Control | ELA | Total imágenes | Sujetos únicos |
-|-------------|---------|-----|----------------|----------------|
-| Bicep       | 52      | 52  | 104            | 52             |
-| Antebrazo   | 52      | 52  | 104            | 52             |
-| Quadriceps  | 52      | 52  | 104            | 52             |
-| Tibial      | 52      | 52  | 104            | 52             |
+| Muscle      | Control | ALS | Total images | Unique subjects |
+|-------------|---------|-----|--------------|-----------------|
+| Bicep       | 52      | 52  | 104          | 52              |
+| Antebrazo   | 52      | 52  | 104          | 52              |
+| Quadriceps  | 52      | 52  | 104          | 52              |
+| Tibial      | 52      | 52  | 104          | 52              |
 
-Total: **52 pacientes únicos** (26 ELA + 26 Control), cada uno con sus 4 músculos
-(2 imágenes por músculo: lados derecho e izquierdo).
+Total: **52 unique patients** (26 ALS + 26 Control), each with their 4 muscles
+(2 images per muscle: right and left sides).
 
 ---
 
-## Metodología
+## Methodology
 
-### Preprocesado
-Conversión de las ROIs `.tif` a JPG 224×224 RGB (estándar de ImageNet) y
-normalización con los estadísticos `mean=[0.485, 0.456, 0.406]`,
-`std=[0.229, 0.224, 0.225]`. *Data augmentation* en entrenamiento: flip
-horizontal (p=0.5), flip vertical (p=0.2), rotación ±10°, color jitter
-(brightness/contrast 0.2), traslación afín ±5 %. La augmentación está motivada
-clínicamente (variabilidad de sonda y protocolos entre adquisiciones).
+### Preprocessing
+Conversion of the `.tif` ROIs to 224×224 RGB JPG (ImageNet standard) and
+normalisation with the statistics `mean=[0.485, 0.456, 0.406]`,
+`std=[0.229, 0.224, 0.225]`. Training-time *data augmentation*: horizontal
+flip (p=0.5), vertical flip (p=0.2), ±10° rotation, color jitter
+(brightness/contrast 0.2), ±5% affine translation. The augmentation is
+clinically motivated (probe and protocol variability across acquisitions).
 
-### Particionado por paciente (sin fuga)
-Todas las imágenes de un mismo sujeto van al mismo subconjunto. La identidad
-del paciente se extrae del nombre de fichero mediante una expresión regular
-robusta. La validación cruzada principal usa `StratifiedGroupKFold` con
-**5 folds**, que combina la restricción por sujeto (`groups`) con la
-estratificación por clase. Una versión simple (split 80/20 con
-`GroupShuffleSplit`) se usó en la fase exploratoria.
+### Per-patient partitioning (leakage-free)
+All images of the same subject go to the same subset. The patient identity is
+extracted from the file name with a robust regular expression. The main
+cross-validation uses `StratifiedGroupKFold` with **5 folds**, combining the
+per-subject constraint (`groups`) with class stratification. A simple version
+(80/20 split with `GroupShuffleSplit`) was used in the exploratory phase.
 
-### Arquitecturas
-Cinco CNNs pre-entrenadas en ImageNet (`torchvision.models`), con la última
-capa reemplazada para clasificación binaria:
+### Architectures
+Five CNNs pre-trained on ImageNet (`torchvision.models`), with the last layer
+replaced for binary classification:
 
-| Arquitectura       | Parámetros aprox. | Notas                              |
-|--------------------|-------------------|-------------------------------------|
-| ResNet-18          | 11 M              | *Best all-rounder*                  |
-| ResNet-50          | 26 M              | **Sistema final tras fusión**       |
-| DenseNet-121       | 7 M               |                                     |
-| EfficientNet-B0    | 5 M               |                                     |
-| ConvNeXt-Tiny      | 28 M              | CNN moderna inspirada en Transformers |
+| Architecture       | Approx. parameters | Notes                              |
+|--------------------|--------------------|-------------------------------------|
+| ResNet-18          | 11 M               | *Best all-rounder*                  |
+| ResNet-50          | 26 M               | **Final system after fusion**       |
+| DenseNet-121       | 8 M                |                                     |
+| EfficientNet-B0    | 5 M                |                                     |
+| ConvNeXt-Tiny      | 28 M               | Modern CNN inspired by Transformers |
 
-Se descartaron VGG-16 y MobileNet-V3 Small de la comparativa final por
-motivos de capacidad y redundancia respectivamente.
+VGG-16 and MobileNet-V3 Small were dropped from the final comparison due to
+capacity and redundancy reasons respectively.
 
-### Entrenamiento
-- Pérdida `CrossEntropyLoss`, optimizador `Adam` (LR `1e-4`).
-- *Scheduler* `ReduceLROnPlateau` (factor 0.5, patience 5) sobre AUC en val.
-- Batch size 16, 50 epochs, semilla fija (42).
-- Selección de checkpoint por **AUC en val** (más estable que accuracy con
-  *n* pequeño).
+### Training
+- `CrossEntropyLoss` loss, `Adam` optimizer (LR `1e-4`).
+- `ReduceLROnPlateau` scheduler (factor 0.5, patience 5) on validation AUC.
+- Batch size 16, 50 epochs, fixed seed (42).
+- Checkpoint selection by **validation AUC** (more stable than accuracy with
+  small *n*).
 
-### Análisis estadístico (`statistical_tests.py`)
-- IC95 % de la media del AUC por (modelo, músculo) con **t-Student** sobre
-  los 5 AUCs por fold y, complementariamente, bootstrap sobre esos mismos
-  AUCs. Se documenta por qué *no* se usa bootstrap sobre predicciones
-  concatenadas (mezcla calibraciones de modelos distintos).
-- Comparación frente al baseline clínico (Martínez-Payá 2017): si el AUC
-  publicado cae dentro del IC95 %, "equivalente"; si fuera, ventaja
-  estadística para una u otra parte.
-- Recalibración con **umbral óptimo de Youden** (J = Sens + Spec − 1)
-  buscado por fold, para reportar Sens/Spec honestos a nivel músculo.
-- Tests pareados entre arquitecturas: Wilcoxon signed-rank (sobre AUCs por
-  fold), DeLong (sobre predicciones concatenadas) y McNemar (sobre
-  aciertos binarios).
+### Statistical analysis (`statistical_tests.py`)
+- 95% CI of the mean AUC per (model, muscle) with **t-Student** over the 5
+  per-fold AUCs and, complementarily, bootstrap over those same AUCs. It is
+  documented why bootstrap over concatenated predictions is *not* used (it
+  mixes calibrations from different models).
+- Comparison against the clinical baseline (Martinez-Paya 2017): if the
+  published AUC falls inside the 95% CI, "equivalent"; if outside, a
+  statistical advantage for one side or the other.
+- Recalibration with the **optimal Youden threshold** (J = Sens + Spec − 1)
+  searched per fold, to report honest Sens/Spec at the muscle level.
+- Paired tests between architectures: Wilcoxon signed-rank (over per-fold
+  AUCs), DeLong (over concatenated predictions) and McNemar (over binary
+  hits/misses).
 
-### Fusión a nivel paciente (`patient_level_fusion.py`)
-- Predicciones **out-of-fold** (OOF): cada paciente recibe una probabilidad
-  por músculo proveniente del fold en el que estuvo en validación
-  (nunca lo vio el modelo en entrenamiento).
-- Agregación a paciente: media de las probabilidades de sus imágenes en
-  cada músculo.
-- Tres reglas de fusión multi-músculo: media simple, media ponderada por
-  AUC del músculo, voto mayoritario.
-- Recalibración con Youden sobre la probabilidad fusionada.
-- IC95 % por bootstrap (N=1000) sobre los 52 pacientes para Acc/Sens/Spec/AUC.
-- Se reporta por arquitectura **y** una variante "campeones por músculo"
-  (mejor modelo de cada músculo). La variante de campeones rinde de forma
-  estadísticamente equivalente a las arquitecturas únicas (los AUC fusionados
-  caen en intervalos de confianza solapados); el sistema final emplea una sola
-  arquitectura (ResNet-50) por simplicidad operativa y mantenibilidad, no por
-  una ventaja de AUC, y por ofrecer sensibilidad del 100 % (ningún ELA sin
-  detectar).
+### Patient-level fusion (`patient_level_fusion.py`)
+- **Out-of-fold** (OOF) predictions: each patient gets a per-muscle
+  probability from the fold in which they were in validation (the model never
+  saw them during training).
+- Patient aggregation: mean of the probabilities of their images in each
+  muscle.
+- Three multi-muscle fusion rules: simple mean, AUC-weighted mean, majority
+  vote.
+- Recalibration with Youden over the fused probability.
+- 95% bootstrap CI (N=1000) over the 52 patients for Acc/Sens/Spec/AUC.
+- Results are reported per architecture **and** for a "per-muscle champions"
+  variant (best model of each muscle). The champions variant performs
+  statistically equivalently to the single architectures (the fused AUCs fall
+  in overlapping confidence intervals); the final system uses a single
+  architecture (ResNet-50) for operational simplicity and maintainability, not
+  for an AUC advantage, and because it offers 100% sensitivity (no ALS case
+  missed).
 
-### Explicabilidad (`explainability.py`)
-Cuatro técnicas sobre ResNet-50 (sistema final), usando los pesos del fold
-con mejor AUC en cada músculo y dos imágenes ELA + dos Control extraídas de
-la *val set* de ese fold (out-of-fold honesto):
+### Explainability (`explainability.py`)
+Four techniques on ResNet-50 (final system), using the weights of the
+best-AUC fold per muscle and two ALS + two Control images taken from that
+fold's *val set* (honest out-of-fold):
 
 - Grad-CAM
 - Guided Grad-CAM
 - Saliency maps
-- Occlusion (parches 32, *stride* 16)
+- Occlusion (32-px patches, *stride* 16)
 
-Se incluye una figura resumen 4×4 (4 músculos × 4 imágenes) lista para la
-memoria.
-
----
-
-## Métricas
-
-Se reportan las relevantes en diagnóstico médico:
-
-- **Sensibilidad** (TPR): fracción de pacientes ELA correctamente
-  identificados.
-- **Especificidad** (TNR): fracción de controles correctamente
-  identificados.
-- **AUC-ROC**: insensible al umbral y al desbalance.
-- A nivel paciente, todas las anteriores se acompañan de IC95 % por
-  bootstrap.
+A 4×4 summary figure (4 muscles × 4 images) ready for the thesis is included.
 
 ---
 
-## Instalación
+## Metrics
 
-Requiere Python 3.10 o superior. Probado en macOS (Apple Silicon, MPS) y
+The metrics relevant in medical diagnosis are reported:
+
+- **Sensitivity** (TPR): fraction of ALS patients correctly identified.
+- **Specificity** (TNR): fraction of controls correctly identified.
+- **AUC-ROC**: insensitive to threshold and class imbalance.
+- At the patient level, all of the above come with a 95% bootstrap CI.
+
+---
+
+## Installation
+
+Requires Python 3.10 or higher. Tested on macOS (Apple Silicon, MPS) and
 Linux (CUDA).
 
 ```bash
-git clone <url-del-repo>
+git clone <repo-url>
 cd TFG
 python3 -m venv .venv
 source .venv/bin/activate
@@ -255,67 +252,70 @@ python3 -m pip install -r requirements.txt
 
 ---
 
-## Uso (pipeline completo)
+## Usage (full pipeline)
 
-Todos los comandos se ejecutan desde `src/`.
+All commands are run from `src/`.
 
 ```bash
-# 1) Preprocesar las imágenes originales (solo la primera vez)
+# 1) Preprocess the original images (only the first time)
 python3 preprocessing.py
 python3 organise_data.py
 
-# 2) Verificar el split por paciente (assert de no-overlap)
+# 2) Verify the per-patient split (no-overlap assertion)
 python3 dataset.py
 
-# 3) Entrenamiento principal: 5 modelos × 4 músculos × 5 folds = 100 trainings
-#    Genera best_models_kfold/ y models/resultados_kfold/kfold_predictions.json
+# 3) Main training: 5 models × 4 muscles × 5 folds = 100 trainings
+#    Generates best_models_kfold/ and models/resultados_kfold/kfold_predictions.json
 python3 train_kfold.py
 
-# 4) Análisis estadístico (IC t-Student, vs baseline, Youden, tests pareados)
+# 4) Statistical analysis (t-Student CI, vs baseline, Youden, paired tests)
 python3 statistical_tests.py
 
-# 5) Fusión a nivel paciente (out-of-fold + bootstrap IC95%)
+# 5) Patient-level fusion (out-of-fold + bootstrap 95% CI)
 python3 patient_level_fusion.py
-#  Para reusar oof_predictions.json sin re-inferir:
+#  To reuse oof_predictions.json without re-inferring:
 #  python3 patient_level_fusion.py --skip-inference
 
-# 6) Mapas de explicabilidad (ResNet-50, los 4 músculos)
+# 6) Explainability maps (ResNet-50, the 4 muscles)
 python3 explainability.py
 
-# 7) Regenerar las figuras de la memoria desde los resultados
-#    (matriz de confusión, boxplots de AUC y curvas ROC)
+# 7) Regenerate the thesis figures from the results
+#    (confusion matrix, AUC boxplots and ROC curves)
 python3 create_figures.py
 ```
 
-La fase exploratoria (split 80/20 + `evaluate_saved.py`) se mantiene en el
-repositorio por trazabilidad pero **no es parte del experimento principal**.
+The exploratory phase (80/20 split + `evaluate_saved.py`) is kept in the
+repository for traceability but is **not part of the main experiment**.
 
 ---
 
 ## Hardware
 
-- **Recomendado:** macOS con Apple Silicon (MPS) o Linux con GPU NVIDIA (CUDA).
-- **Tiempo aproximado del experimento principal en M-series con MPS:**
-  ~6–10 h para los 100 trainings + minutos para los análisis.
-- La detección del acelerador es automática (`config.py`).
+- **Recommended:** macOS with Apple Silicon (MPS) or Linux with an NVIDIA GPU (CUDA).
+- **Approximate time of the main experiment on M-series with MPS:**
+  ~6–10 h for the 100 trainings + minutes for the analyses.
+- Accelerator detection is automatic (`config.py`).
 
 ---
 
-## Referencias
+## References
 
-1. Martínez-Payá, J. J., del Baño-Aledo, M. E., Ríos-Díaz, J., et al. (2017).
+1. Martinez-Paya, J. J., del Bano-Aledo, M. E., Rios-Diaz, J., et al. (2017).
    *Quantitative muscle ultrasonography using textural analysis in amyotrophic
-   lateral sclerosis.*
-2. Martínez-Payá, J. J., Ríos-Díaz, J., Medina-Mirapeix, F., et al. (2018).
-   *Monitoring the progression of amyotrophic lateral sclerosis through muscle
-   ultrasound: a longitudinal study.*
+   lateral sclerosis.* Ultrasonic Imaging, 39(6):357–368.
+   DOI: 10.1177/0161734617711370
+2. Martinez-Paya, J. J., Rios-Diaz, J., Medina-Mirapeix, F., et al. (2018).
+   *Monitoring progression of amyotrophic lateral sclerosis using ultrasound
+   morpho-textural muscle biomarkers: a pilot study.* Ultrasound in Medicine &
+   Biology, 44(1):102–109.
 
-Ambos artículos se encuentran en `docs/`.
+The papers are not redistributed in this repository for copyright reasons; they
+can be accessed through the DOI / journal above.
 
 ---
 
-## Licencia y uso
+## License and use
 
-Código desarrollado como Trabajo Fin de Grado. Los datos clínicos son
-propiedad del centro médico colaborador y no están incluidos en este
-repositorio.
+Code developed as a Bachelor's Thesis (Trabajo Fin de Grado). The clinical data
+are property of the collaborating medical centre and are not included in this
+repository.
