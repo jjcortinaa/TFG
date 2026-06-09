@@ -64,7 +64,7 @@ TFG/
 │   ├── statistical_tests.py          IC, vs baseline, Youden, Wilcoxon/DeLong/McNemar
 │   ├── patient_level_fusion.py       Fusión OOF multi-músculo a nivel paciente + bootstrap
 │   ├── explainability.py             Grad-CAM, Guided Grad-CAM, Saliency, Occlusion (ResNet-50)
-│   └── make_figuras_memoria.py       Regenera las figuras de resultados de la memoria
+│   └── create_figures.py            Regenera las figuras de resultados de la memoria
 │
 ├── memoria/                          Fuente LaTeX de la memoria
 │   ├── TFG_spanish.tex               Documento principal (bilingüe ES/EN)
@@ -72,7 +72,7 @@ TFG/
 │   ├── ref_tfg.bib                   Bibliografía principal
 │   ├── ref_executive_summary.bib     Bibliografía del resumen ejecutivo
 │   ├── images/                       Figuras (matriz de confusión, boxplots, ROC, Grad-CAM, logos)
-│   ├── .latexmkrc, compilar.command, COMO_COMPILAR.md   Ayudas de compilación
+│   ├── .latexmkrc                    Configuración de compilación (latexmk + biber)
 │   └── TFG_spanish.pdf               Memoria compilada
 │
 ├── .vscode/                          Configuración de LaTeX Workshop (para revisores)
@@ -284,7 +284,7 @@ python3 explainability.py
 
 # 7) Regenerar las figuras de la memoria desde los resultados
 #    (matriz de confusión, boxplots de AUC y curvas ROC)
-python3 make_figuras_memoria.py
+python3 create_figures.py
 ```
 
 La fase exploratoria (split 80/20 + `evaluate_saved.py`) se mantiene en el

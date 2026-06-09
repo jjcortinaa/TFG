@@ -16,7 +16,7 @@ since the figures are embedded in the Spanish thesis.
 
 Usage:
     cd src
-    python3 make_figuras_memoria.py
+    python3 create_figures.py
 """
 import os
 import csv

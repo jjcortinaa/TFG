@@ -10,16 +10,14 @@ from config import Config
 # -----------------------------------------------------------------------------
 # Subject identification
 # -----------------------------------------------------------------------------
-# Captures the subject's alphanumeric prefix: "C001", "C026", "RC001", "1001",
-# "1018", etc. It keeps an optional R, an optional C, and 1-4 digits.
-# It is robust to the naming variations that appear in the dataset:
-#   "C001d_BBr_clean.jpg"  -> "C001"
-#   "C001i_BBr_clean.jpg"  -> "C001"    (same subject, other side)
-#   "RC001d_TbA_clean.jpg" -> "RC001"
+# Every file name follows <ID><d|i>_<muscle>_clean.jpg, where <ID> is the
+# patient identifier: plain digits for ALS (e.g. "1001"), "Cnnn" for controls
+# in Bicep/Antebrazo/Quadriceps and "RCnnn" for controls in Tibial. This regex
+# keeps that leading ID (optional R, optional C, digits) and drops the side
+# letter and the rest:
 #   "1001d_BBr_clean.jpg"  -> "1001"
-#   "1018_Cdr_clean.jpg"   -> "1018"    (name without a side letter; Quadriceps)
-#   "1018d(b)_clean.jpg"   -> "1018"    (second take with parentheses; Quadriceps)
-#   "C026_Cdr_clean.jpg"   -> "C026"    (name without a side letter; Quadriceps)
+#   "C026d_Cdr_clean.jpg"  -> "C026"
+#   "RC001d_TbA_clean.jpg" -> "RC001"
 _SUBJECT_RE = re.compile(r"^(R?C?\d+)")
 
 
