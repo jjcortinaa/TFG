@@ -71,10 +71,10 @@ def _build_mobilenet_v3(num_classes):
 
 def _build_convnext_tiny(num_classes):
     """
-    ConvNeXt-Tiny (Liu et al., 2022). CNN moderna inspirada en Transformers
-    (LayerNorm, GELU, bloques en stages) pero manteniendo el inductive bias
-    convolucional — adecuada para datasets pequeños como este.
-    ~28M parámetros.
+    ConvNeXt-Tiny (Liu et al., 2022). Modern CNN inspired by Transformers
+    (LayerNorm, GELU, stage-based blocks) but keeping the convolutional
+    inductive bias -- suitable for small datasets like this one.
+    ~28M parameters.
     """
     model = models.convnext_tiny(weights=models.ConvNeXt_Tiny_Weights.IMAGENET1K_V1)
     in_features = model.classifier[2].in_features

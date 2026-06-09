@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
 """
-Genera las figuras de resultados que aparecen en la memoria del TFG a partir
-de los ficheros de resultados (no se vuelve a entrenar ni a inferir nada):
+Generates the result figures that appear in the thesis, from the result files
+(nothing is retrained nor re-inferred):
 
-  - memoria/images/confusion_final.png      Matriz de confusión del sistema final.
-  - memoria/images/plots/boxplot_auc_combined.png   Boxplots de AUC por fold (2x2).
-  - memoria/images/roc/roc_{musculo}.png    Curvas ROC out-of-fold por músculo.
+  - memoria/images/confusion_final.png              Confusion matrix of the final system.
+  - memoria/images/plots/boxplot_auc_combined.png   AUC boxplots per fold (2x2).
+  - memoria/images/roc/roc_{muscle}.png             Out-of-fold ROC curves per muscle.
 
-Entradas:
-  - models/resultados_kfold/kfold_predictions.json   (AUC por fold + y_true/y_probs)
-  - models/resultados_kfold/fusion_per_architecture.csv  (matriz de confusión final)
+Inputs:
+  - models/resultados_kfold/kfold_predictions.json       (AUC per fold + y_true/y_probs)
+  - models/resultados_kfold/fusion_per_architecture.csv  (final confusion matrix)
 
-Uso:
+Note: the text rendered inside the figures is kept in Spanish on purpose,
+since the figures are embedded in the Spanish thesis.
+
+Usage:
     cd src
     python3 make_figuras_memoria.py
 """
@@ -26,29 +29,29 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
 from sklearn.metrics import roc_curve, roc_auc_score
 
-# ── Rutas (relativas a la raíz del repo) ────────────────────────────────
+# ── Paths (relative to the repo root) ───────────────────────────────────
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS_DIR = os.path.join(BASE_DIR, "models", "resultados_kfold")
 IMG_DIR     = os.path.join(BASE_DIR, "memoria", "images")
 PRED_PATH   = os.path.join(RESULTS_DIR, "kfold_predictions.json")
 FUSION_CSV  = os.path.join(RESULTS_DIR, "fusion_per_architecture.csv")
 
-# ── Configuración de presentación ───────────────────────────────────────
+# ── Display configuration ───────────────────────────────────────────────
 ARCHS = ["resnet18", "resnet50", "densenet121", "efficientnet_b0", "convnext_tiny"]
 DISP  = {"resnet18": "ResNet-18", "resnet50": "ResNet-50", "densenet121": "DenseNet-121",
          "efficientnet_b0": "EfficientNet-B0", "convnext_tiny": "ConvNeXt-Tiny"}
-COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]  # azul, rojo, verde, naranja, morado
+COLORS = ["#1f77b4", "#d62728", "#2ca02c", "#ff7f0e", "#9467bd"]  # blue, red, green, orange, purple
 MUSCLES = [("Bicep", "(a) Bíceps"), ("Antebrazo", "(b) Antebrazo"),
            ("Quadriceps", "(c) Cuádriceps"), ("Tibial", "(d) Tibial")]
 ROC_FILE = {"Bicep": "roc_bicep", "Antebrazo": "roc_antebrazo",
             "Quadriceps": "roc_quadriceps", "Tibial": "roc_tibial"}
 
-# Sistema final que se ilustra en la matriz de confusión
+# Final system illustrated in the confusion matrix
 FINAL_MODEL = "resnet50"
-FINAL_RULE  = "mean_youden"   # fusión por media simple + umbral de Youden
+FINAL_RULE  = "mean_youden"   # simple-mean fusion + Youden threshold
 
 
-# ── Carga de datos ──────────────────────────────────────────────────────
+# ── Data loading ────────────────────────────────────────────────────────
 def _load_predictions():
     with open(PRED_PATH) as f:
         return json.load(f)
@@ -69,7 +72,7 @@ def _oof(pred, muscle, arch):
     return np.array(y_true), np.array(y_prob)
 
 
-# ── Figura 1: matriz de confusión del sistema final ─────────────────────
+# ── Figure 1: confusion matrix of the final system ──────────────────────
 def make_confusion():
     row = None
     with open(FUSION_CSV) as f:
@@ -78,7 +81,7 @@ def make_confusion():
                 row = r
                 break
     if row is None:
-        raise SystemExit(f"No encuentro {FINAL_MODEL}/{FINAL_RULE} en {FUSION_CSV}")
+        raise SystemExit(f"Not found: {FINAL_MODEL}/{FINAL_RULE} in {FUSION_CSV}")
 
     TN, FP, FN, TP = int(row["tn"]), int(row["fp"]), int(row["fn"]), int(row["tp"])
     AUC, ACC, SENS, SPEC = (float(row["auc"]), float(row["acc"]),
@@ -121,7 +124,7 @@ def make_confusion():
     print("  ->", out)
 
 
-# ── Figura 2: boxplots de AUC por fold (2x2) ────────────────────────────
+# ── Figure 2: AUC boxplots per fold (2x2) ───────────────────────────────
 def make_boxplots(pred):
     fig, axes = plt.subplots(2, 2, figsize=(13, 10.5), dpi=150)
     for ax, (mk, title) in zip(axes.flat, MUSCLES):
@@ -142,7 +145,7 @@ def make_boxplots(pred):
     print("  ->", out)
 
 
-# ── Figura 3: curvas ROC out-of-fold por músculo ────────────────────────
+# ── Figure 3: out-of-fold ROC curves per muscle ─────────────────────────
 def make_roc(pred):
     for mk, _ in MUSCLES:
         fig, ax = plt.subplots(figsize=(7, 6), dpi=120)
@@ -166,10 +169,10 @@ def main():
     os.makedirs(os.path.join(IMG_DIR, "plots"), exist_ok=True)
     os.makedirs(os.path.join(IMG_DIR, "roc"), exist_ok=True)
     pred = _load_predictions()
-    print("Matriz de confusión:"); make_confusion()
-    print("Boxplots por fold:");   make_boxplots(pred)
-    print("Curvas ROC:");          make_roc(pred)
-    print("Hecho.")
+    print("Confusion matrix:"); make_confusion()
+    print("Boxplots per fold:"); make_boxplots(pred)
+    print("ROC curves:");        make_roc(pred)
+    print("Done.")
 
 
 if __name__ == "__main__":

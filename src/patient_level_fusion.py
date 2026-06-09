@@ -1,31 +1,31 @@
 """
 patient_level_fusion.py
 ───────────────────────
-Fusión a nivel paciente: combina las predicciones de los 4 músculos
-en un único veredicto ELA / Control por paciente.
+Patient-level fusion: combines the predictions of the 4 muscles into a
+single ALS / Control verdict per patient.
 
-Por qué
--------
-La CV por músculo da métricas a nivel imagen/fold. En la práctica clínica
-se quiere un sistema que, dado un paciente, produzca UNA decisión final.
-Esto se hace agregando en dos pasos:
-    1) Para cada paciente y cada músculo: media de P(ALS) sobre TODAS sus
-       imágenes en ese músculo (out-of-fold; cada paciente está en val
-       exactamente una vez en cada CV por músculo).
-    2) Para cada paciente: fusión de los hasta-4 P(ALS) musculares con
-       distintas reglas (media, voto, media ponderada por AUC).
+Why
+---
+Per-muscle CV gives image/fold-level metrics. In clinical practice we want
+a system that, given a patient, produces ONE final decision. This is done
+by aggregating in two steps:
+    1) For each patient and each muscle: mean of P(ALS) over ALL their
+       images in that muscle (out-of-fold; each patient is in val exactly
+       once in each per-muscle CV).
+    2) For each patient: fusion of the up-to-4 muscle P(ALS) values with
+       different rules (mean, vote, AUC-weighted mean).
 
-Sin overfitting: no se entrena ningún modelo nuevo. Las predicciones por
-músculo son OOF (out-of-fold), nunca el modelo vio al paciente en su fold.
+No overfitting: no new model is trained. The per-muscle predictions are
+OOF (out-of-fold); the model never saw the patient in its fold.
 
-Fusión "por arquitectura"  (cinco filas — una por arquitectura):
-    densenet121 fusionado entre sus 4 músculos, etc.
+"Per-architecture" fusion (five rows — one per architecture):
+    densenet121 fused across its 4 muscles, etc.
 
-Fusión "campeones por músculo":
+"Per-muscle champions" fusion:
     densenet121-bicep + efficientnet_b0-antebrazo + resnet18-quadriceps
-    + resnet18-tibial  →  decisión final del TFG.
+    + resnet18-tibial.
 
-Salida
+Output
 ------
 - models/resultados_kfold/oof_predictions.json
 - models/resultados_kfold/fusion_per_architecture.csv
@@ -48,7 +48,7 @@ from sklearn.metrics import roc_auc_score
 from config import Config
 from models import get_model
 
-# ── Constantes ─────────────────────────────────────────────────────────
+# ── Constants ──────────────────────────────────────────────────────────
 RESULTS_DIR  = os.path.join(Config.BASE_DIR, "models", "resultados_kfold")
 WEIGHTS_DIR  = os.path.join(Config.BASE_DIR, "best_models_kfold")
 OOF_PATH     = os.path.join(RESULTS_DIR, "oof_predictions.json")
@@ -59,7 +59,7 @@ REPORT_PATH  = os.path.join(RESULTS_DIR, "informe_fusion.txt")
 MUSCLES   = ["Bicep", "Antebrazo", "Quadriceps", "Tibial"]
 MODELS    = ["resnet18", "resnet50", "densenet121", "efficientnet_b0", "convnext_tiny"]
 
-# Campeones por músculo elegidos a partir del informe estadístico
+# Per-muscle champions chosen from the statistical report
 CHAMPIONS = {
     "Bicep":      "densenet121",
     "Antebrazo":  "efficientnet_b0",
@@ -67,8 +67,8 @@ CHAMPIONS = {
     "Tibial":     "resnet18",
 }
 
-# AUC medio por (modelo, músculo) — para la regla "media ponderada por AUC"
-# Tomado de informe_estadistico.txt sección 1.
+# Mean AUC per (model, muscle) — for the "AUC-weighted mean" rule.
+# Taken from informe_estadistico.txt section 1.
 AUC_TABLE = {
     ("resnet18",        "Bicep"): 86.25,
     ("resnet50",        "Bicep"): 86.35,
@@ -93,21 +93,21 @@ AUC_TABLE = {
 }
 
 
-# ── Identificación de paciente normalizada entre músculos ──────────────
-# Convención de nombrado del dataset (confirmada con el tutor):
-# un mismo paciente control aparece como "C001" en Bicep/Antebrazo/Quadriceps
-# y como "RC001" en Tibial. Aquí normalizamos al ID común "C001" + clase.
+# ── Patient identification normalized across muscles ───────────────────
+# Dataset naming convention (confirmed with the supervisor):
+# the same control patient appears as "C001" in Bicep/Antebrazo/Quadriceps
+# and as "RC001" in Tibial. Here we normalize to the common ID "C001" + class.
 _NUMERIC_RE = re.compile(r"^R?(C?\d+)")
 
 def patient_uid(filename: str, class_name: str) -> str:
-    """Devuelve un ID único de paciente normalizado a través de músculos."""
+    """Returns a unique patient ID normalized across muscles."""
     m = _NUMERIC_RE.match(filename)
     if not m:
         return f"{class_name}/UNPARSED-{filename}"
     return f"{class_name}/{m.group(1)}"
 
 
-# ── Reconstrucción del split + inferencia OOF ──────────────────────────
+# ── Split reconstruction + OOF inference ───────────────────────────────
 def _val_transform():
     return transforms.Compose([
         transforms.Resize(Config.IMAGE_SIZE),
@@ -118,7 +118,7 @@ def _val_transform():
 
 
 def _build_muscle_dataset(muscle: str):
-    """Devuelve (dataset, labels, groups). Igual seed/orden que dataset.py."""
+    """Returns (dataset, labels, groups). Same seed/order as dataset.py."""
     path = os.path.join(Config.PROCESSED_DATA_PATH, muscle)
     ds = datasets.ImageFolder(root=path, transform=_val_transform())
     labels, groups = [], []
@@ -131,22 +131,22 @@ def _build_muscle_dataset(muscle: str):
 
 def generate_oof_predictions(device=None):
     """
-    Para cada (model, muscle, fold) carga el .pth, reconstruye el split con
-    el mismo seed y corre inferencia sobre val. Guarda P(ALS) por imagen
-    junto con su patient_id, etiqueta y fold.
+    For each (model, muscle, fold) loads the .pth, rebuilds the split with
+    the same seed and runs inference over val. Saves P(ALS) per image
+    together with its patient_id, label and fold.
     """
     if device is None:
         device = (torch.device("mps") if torch.backends.mps.is_available()
                   else torch.device("cpu"))
     print(f"[device] {device}")
 
-    out = []  # cada elemento: dict imagen
+    out = []  # each element: one image dict
     for muscle in MUSCLES:
         ds, labels, groups = _build_muscle_dataset(muscle)
         sgkf = StratifiedGroupKFold(
             n_splits=5, shuffle=True, random_state=Config.SEED,
         )
-        # Pre-calcular val_idx por fold (mismo orden que entrenamiento)
+        # Pre-compute val_idx per fold (same order as training)
         folds = list(sgkf.split(X=range(len(ds)), y=labels, groups=groups))
 
         for model_name in MODELS:
@@ -157,7 +157,7 @@ def generate_oof_predictions(device=None):
                     f"{model_name}_{muscle.lower()}_fold{k}_best.pth",
                 )
                 if not os.path.exists(pth):
-                    print(f"[skip fold {k} no .pth]", end=" ")
+                    print(f"[skip fold {k}: no .pth]", end=" ")
                     continue
 
                 model = get_model(model_name).to(device)
@@ -169,7 +169,7 @@ def generate_oof_predictions(device=None):
                     Subset(ds, val_idx),
                     batch_size=Config.BATCH_SIZE, shuffle=False,
                 )
-                idx_iter = iter(val_idx)  # para emparejar con paths
+                idx_iter = iter(val_idx)  # to pair with paths
                 with torch.no_grad():
                     for images, lbls in loader:
                         images = images.to(device)
@@ -190,22 +190,22 @@ def generate_oof_predictions(device=None):
                                 "pred":    int(pr),
                                 "image":   os.path.basename(fp),
                             })
-                # libera memoria GPU/MPS antes del siguiente checkpoint
+                # free GPU/MPS memory before the next checkpoint
                 del model, state
             print()
 
     os.makedirs(RESULTS_DIR, exist_ok=True)
     with open(OOF_PATH, "w") as f:
         json.dump(out, f, indent=2)
-    print(f"\nOOF predictions -> {OOF_PATH}  ({len(out)} filas)")
+    print(f"\nOOF predictions -> {OOF_PATH}  ({len(out)} rows)")
     return out
 
 
-# ── Agregación paciente × músculo ───────────────────────────────────────
+# ── Patient × muscle aggregation ────────────────────────────────────────
 def aggregate_per_patient_muscle(oof):
     """
-    Agrupa por (model, muscle, patient). Devuelve dict:
-        agg[(model, muscle)][patient] = {prob: media, label: int}
+    Groups by (model, muscle, patient). Returns a dict:
+        agg[(model, muscle)][patient] = {prob: mean, label: int}
     """
     bucket = defaultdict(lambda: defaultdict(list))
     label_of = {}
@@ -221,7 +221,7 @@ def aggregate_per_patient_muscle(oof):
     return agg
 
 
-# ── Reglas de fusión ────────────────────────────────────────────────────
+# ── Fusion rules ─────────────────────────────────────────────────────────
 def fuse_mean(probs_per_muscle):
     return float(np.mean(probs_per_muscle))
 
@@ -235,7 +235,7 @@ def fuse_majority_vote(probs_per_muscle, threshold=0.5):
     return 1 if votes > len(probs_per_muscle) / 2 else 0
 
 
-# ── Métricas a nivel paciente ───────────────────────────────────────────
+# ── Patient-level metrics ───────────────────────────────────────────────
 def _metrics_from_pred(y_true, y_pred):
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -267,12 +267,12 @@ def _best_youden_threshold(y_true, y_score):
 
 def _bootstrap_patient_ci(y_true, scores, threshold, n_boot=1000, seed=42):
     """
-    IC95% por bootstrap percentil a nivel paciente para Acc/Sens/Spec/AUC.
+    Percentile bootstrap 95% CI at the patient level for Acc/Sens/Spec/AUC.
 
-    Remuestrea N veces con reemplazo el conjunto de pacientes. En cada
-    remuestreo recomputa las 4 métricas usando el umbral fijado. Devuelve
-    los percentiles 2.5 y 97.5. Saltamos remuestreos con una sola clase
-    (no se puede calcular Sens/Spec/AUC).
+    Resamples the set of patients N times with replacement. In each
+    resample it recomputes the 4 metrics using the fixed threshold. Returns
+    the 2.5 and 97.5 percentiles. Resamples with a single class are skipped
+    (Sens/Spec/AUC cannot be computed).
     """
     rng = np.random.default_rng(seed)
     y_true = np.asarray(y_true)
@@ -304,11 +304,11 @@ def _bootstrap_patient_ci(y_true, scores, threshold, n_boot=1000, seed=42):
     }
 
 
-# ── Fusión por arquitectura ─────────────────────────────────────────────
+# ── Per-architecture fusion ─────────────────────────────────────────────
 def fusion_per_architecture(agg):
     rows = []
     for model in MODELS:
-        # Para esta arquitectura, recolectar predicciones por paciente×músculo
+        # For this architecture, collect predictions per patient×muscle
         by_pat = defaultdict(dict)  # patient -> {muscle: prob, "label": lbl}
         for muscle in MUSCLES:
             patients = agg.get((model, muscle), {})
@@ -319,7 +319,7 @@ def fusion_per_architecture(agg):
         if not by_pat:
             continue
 
-        # Construir vectores por paciente
+        # Build per-patient vectors
         y_true, mean_probs, weighted_probs, votes = [], [], [], []
         n_muscles_seen = []
         for pid, info in by_pat.items():
@@ -337,7 +337,7 @@ def fusion_per_architecture(agg):
         mean_probs    = np.array(mean_probs)
         weighted_probs= np.array(weighted_probs)
 
-        # Métricas con umbral 0.5 y con umbral óptimo (Youden) sobre la fusión
+        # Metrics at threshold 0.5 and at the optimal (Youden) threshold over the fusion
         for label, score in [("mean_youden",     mean_probs),
                              ("weighted_youden", weighted_probs)]:
             thr = _best_youden_threshold(y_true, score)
@@ -365,7 +365,7 @@ def fusion_per_architecture(agg):
                 "tp": m["tp"], "tn": m["tn"], "fp": m["fp"], "fn": m["fn"],
             })
 
-        # Voto mayoritario (decisión binaria, sin AUC continua significativa)
+        # Majority vote (binary decision, no meaningful continuous AUC)
         votes_arr = np.array(votes)
         m = _metrics_from_pred(y_true, votes_arr)
         rows.append({
@@ -390,9 +390,9 @@ def fusion_per_architecture(agg):
     return rows
 
 
-# ── Fusión "campeones por músculo" ──────────────────────────────────────
+# ── "Per-muscle champions" fusion ───────────────────────────────────────
 def fusion_champions(agg):
-    """Combina los 4 modelos campeones (uno por músculo) → una sola fila por regla."""
+    """Combines the 4 champion models (one per muscle) -> a single row per rule."""
     by_pat = defaultdict(dict)
     for muscle in MUSCLES:
         model = CHAMPIONS[muscle]
@@ -466,7 +466,7 @@ def fusion_champions(agg):
     return rows
 
 
-# ── Informe ─────────────────────────────────────────────────────────────
+# ── Report (kept in Spanish: it ships with the Spanish thesis) ──────────
 def write_report(arch_rows, champ_rows):
     with open(REPORT_PATH, "w") as f:
         f.write("="*78 + "\n")
@@ -530,10 +530,10 @@ def write_report(arch_rows, champ_rows):
         f.write("  músculos votan ALS (≥2 si solo hay 4 disponibles → estricto).\n")
         f.write("- n_patients=número de pacientes con al menos un músculo. muscles_avg\n")
         f.write("  es el promedio de músculos disponibles por paciente.\n")
-    print(f"  Informe -> {REPORT_PATH}")
+    print(f"  Report -> {REPORT_PATH}")
 
 
-# ── Utilidades ─────────────────────────────────────────────────────────
+# ── Utilities ──────────────────────────────────────────────────────────
 def _write_csv(path, rows):
     if not rows:
         return
@@ -552,22 +552,22 @@ def main(skip_inference=False):
     if skip_inference and os.path.exists(OOF_PATH):
         with open(OOF_PATH) as f:
             oof = json.load(f)
-        print(f"[loaded] {OOF_PATH}  ({len(oof)} filas)")
+        print(f"[loaded] {OOF_PATH}  ({len(oof)} rows)")
     else:
-        print("[1/3] Generando OOF predictions...")
+        print("[1/3] Generating OOF predictions...")
         oof = generate_oof_predictions()
 
-    print("\n[2/3] Agregación por paciente×músculo...")
+    print("\n[2/3] Patient×muscle aggregation...")
     agg = aggregate_per_patient_muscle(oof)
     n_combos = sum(len(v) for v in agg.values())
-    print(f"    {len(agg)} (model, muscle) — {n_combos} preds paciente×músculo")
+    print(f"    {len(agg)} (model, muscle) — {n_combos} patient×muscle preds")
 
-    print("\n[3/3] Fusión y informe...")
+    print("\n[3/3] Fusion and report...")
     arch_rows  = fusion_per_architecture(agg)
     champ_rows = fusion_champions(agg)
     write_report(arch_rows, champ_rows)
 
-    print("\nHecho. Resultados en:", RESULTS_DIR)
+    print("\nDone. Results in:", RESULTS_DIR)
 
 
 if __name__ == "__main__":

@@ -1,10 +1,10 @@
 """
 evaluate_saved.py
 ─────────────────
-Carga los modelos ya entrenados desde TFG/best_models/ y calcula
-todas las métricas sin volver a entrenar nada.
+Loads the already-trained models from TFG/best_models/ and computes
+all the metrics without retraining anything.
 
-Uso desde TFG/src/:
+Usage from TFG/src/:
     python3 evaluate_saved.py
 """
 import torch
@@ -21,10 +21,10 @@ from dataset import get_dataloaders
 from models import get_model
 from config import Config
 
-# Donde están los .pth guardados por train.py / evaluation.py
+# Where the .pth files saved by train.py / evaluation.py live
 MODELS_DIR  = os.path.join(Config.BASE_DIR, "best_models")
 
-# Donde se guardan los resultados
+# Where the results are saved
 RESULTS_DIR = os.path.join(Config.BASE_DIR, "models", "resultados_comparativa")
 
 MUSCLES     = ["Bicep", "Antebrazo", "Quadriceps", "Tibial"]
@@ -33,16 +33,16 @@ MODEL_NAMES = ["resnet18", "resnet50", "vgg16", "densenet121", "efficientnet_b0"
 
 def evaluate_one(model_name: str, muscle_name: str, device):
     """
-    Carga el .pth de un (modelo, músculo) y devuelve sus métricas.
-    Si no existe el fichero .pth lo indica y devuelve None.
+    Loads the .pth of a (model, muscle) and returns its metrics.
+    If the .pth file does not exist, it reports it and returns None.
     """
     pth_path = os.path.join(MODELS_DIR, f"{model_name}_{muscle_name.lower()}_best.pth")
 
     if not os.path.exists(pth_path):
-        print(f"  [SKIP] No encontrado: {pth_path}")
+        print(f"  [SKIP] Not found: {pth_path}")
         return None
 
-    print(f"  Cargando {pth_path}")
+    print(f"  Loading {pth_path}")
 
     model = get_model(model_name).to(device)
     model.load_state_dict(torch.load(pth_path, map_location=device, weights_only=True))
@@ -231,22 +231,22 @@ def save_reports(results):
 
 def evaluate_all(muscles=None, model_names=None):
     """
-    Recorre todos los (modelo x músculo), carga los .pth que existan
-    en TFG/best_models/ y genera todas las métricas y gráficas.
-    Los modelos no entrenados aún se saltan automáticamente.
+    Iterates over all (model x muscle) pairs, loads the .pth files that exist
+    in TFG/best_models/ and generates all the metrics and plots.
+    Models not yet trained are skipped automatically.
     """
     if muscles     is None: muscles     = MUSCLES
     if model_names is None: model_names = MODEL_NAMES
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
-    print(f"\nDispositivo : {device}")
-    print(f"Buscando modelos en: {MODELS_DIR}")
-    print(f"Guardando resultados en: {RESULTS_DIR}\n")
+    print(f"\nDevice : {device}")
+    print(f"Searching for models in: {MODELS_DIR}")
+    print(f"Saving results in: {RESULTS_DIR}\n")
 
     results = []
     for muscle in muscles:
         print(f"\n{'='*60}")
-        print(f"  MÚSCULO: {muscle.upper()}")
+        print(f"  MUSCLE: {muscle.upper()}")
         print(f"{'='*60}")
         for model_name in model_names:
             r = evaluate_one(model_name, muscle, device)
@@ -255,11 +255,11 @@ def evaluate_all(muscles=None, model_names=None):
                 save_cm_plot(r)
 
     if not results:
-        print("\n[AVISO] No se encontró ningún modelo entrenado en:", MODELS_DIR)
-        print("Ejecuta primero: python3 train.py")
+        print("\n[WARNING] No trained model found in:", MODELS_DIR)
+        print("Run first: python3 train.py")
         return
 
-    # Gráficas comparativas (solo si hay más de un resultado)
+    # Comparative plots (only if there is more than one result)
     if len(results) > 1:
         save_bar_chart(results, metric="auc")
         save_bar_chart(results, metric="acc")
@@ -268,9 +268,9 @@ def evaluate_all(muscles=None, model_names=None):
 
     save_reports(results)
 
-    # Tabla resumen en consola
+    # Summary table in the console
     print("\n" + "="*70)
-    print("  RESULTADOS FINALES (ordenados por AUC)")
+    print("  FINAL RESULTS (sorted by AUC)")
     print("="*70)
     print(f"  {'MODEL':<20} {'MUSCLE':<14} {'ACC':>8} {'SENS':>8} {'SPEC':>8} {'AUC':>8}")
     print("  " + "-"*66)

@@ -1,28 +1,28 @@
 """
 train_kfold.py
 ──────────────
-Entrenamiento con 5-fold StratifiedGroupKFold para cada (modelo, músculo).
+Training with 5-fold StratifiedGroupKFold for each (model, muscle).
 
-Por qué
--------
-El split único 80/20 con ~22 imágenes en validación es frágil: 1 imagen
-mal clasificada ≈ 4.5 puntos de accuracy. Con 5 folds obtenemos una
-media y una desviación estándar por cada (modelo, músculo), lo cual:
-  (1) reduce la dependencia del split concreto,
-  (2) permite calcular un intervalo de confianza al 95% para el AUC,
-  (3) habilita tests estadísticos pareados entre arquitecturas.
-
-Salida
-------
-- best_models_kfold/{modelo}_{musculo}_fold{k}_best.pth  (pesos de cada fold)
-- models/resultados_kfold/kfold_predictions.json          (y_true, y_probs, y_pred por fold)
-- models/resultados_kfold/kfold_summary.csv               (media ± std por (modelo, músculo))
-
-Uso
+Why
 ---
+A single 80/20 split with ~22 validation images is fragile: 1 misclassified
+image ≈ 4.5 accuracy points. With 5 folds we obtain a mean and a standard
+deviation for each (model, muscle), which:
+  (1) reduces the dependence on the particular split,
+  (2) allows computing a 95% confidence interval for the AUC,
+  (3) enables paired statistical tests between architectures.
+
+Output
+------
+- best_models_kfold/{model}_{muscle}_fold{k}_best.pth   (weights of each fold)
+- models/resultados_kfold/kfold_predictions.json         (y_true, y_probs, y_pred per fold)
+- models/resultados_kfold/kfold_summary.csv              (mean ± std per (model, muscle))
+
+Usage
+-----
     cd src
     python3 train_kfold.py
-    # opcional: una sola arquitectura
+    # optional: a single architecture
     # python3 -c "from train_kfold import train_kfold_all; train_kfold_all(model_names=['resnet18'])"
 """
 import os
@@ -40,7 +40,7 @@ from models import get_model, get_all_model_names
 from config import Config
 
 
-# Directorios de salida
+# Output directories
 SAVE_DIR     = os.path.join(Config.BASE_DIR, "best_models_kfold")
 RESULTS_DIR  = os.path.join(Config.BASE_DIR, "models", "resultados_kfold")
 PRED_PATH    = os.path.join(RESULTS_DIR, "kfold_predictions.json")
@@ -48,11 +48,11 @@ SUMMARY_PATH = os.path.join(RESULTS_DIR, "kfold_summary.csv")
 
 MUSCLES     = ["Bicep", "Antebrazo", "Quadriceps", "Tibial"]
 
-# Arquitecturas seleccionadas para la comparativa del TFG.
-# Se descartan VGG-16 (138 M params → overfitting esperado en dataset pequeño)
-# y MobileNet-V3 Small (redundante con EfficientNet-B0 en la narrativa de
-# "arquitectura moderna eficiente"). Se incluye ConvNeXt-Tiny como
-# representante de la convergencia arquitectónica post-Transformer.
+# Architectures selected for the thesis comparison.
+# VGG-16 (138 M params -> expected overfitting on a small dataset) and
+# MobileNet-V3 Small (redundant with EfficientNet-B0 in the "modern efficient
+# architecture" narrative) are discarded. ConvNeXt-Tiny is included as a
+# representative of the post-Transformer architectural convergence.
 MODEL_NAMES = [
     "resnet18",
     "resnet50",
@@ -62,15 +62,15 @@ MODEL_NAMES = [
 ]
 
 
-# ── Entrenamiento de un único fold ─────────────────────────────────────
+# ── Training of a single fold ──────────────────────────────────────────
 def _train_single_fold(model_name, muscle_name, fold_idx,
                        train_loader, val_loader, device):
     """
-    Entrena una combinación (modelo, músculo) en UN fold concreto.
-    Selecciona el checkpoint por mejor AUC en validación
-    (más estable que accuracy con val pequeño).
+    Trains a (model, muscle) combination on ONE specific fold.
+    Selects the checkpoint by best validation AUC
+    (more stable than accuracy with a small val set).
 
-    Devuelve un dict con métricas finales y predicciones del mejor epoch.
+    Returns a dict with the final metrics and the predictions of the best epoch.
     """
     model     = get_model(model_name).to(device)
     criterion = nn.CrossEntropyLoss()
@@ -111,7 +111,7 @@ def _train_single_fold(model_name, muscle_name, fold_idx,
                 y_pred.extend(pred.cpu().tolist())
                 y_probs.extend(probs.cpu().tolist())
 
-        # Métricas
+        # Metrics
         tp = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 1)
         tn = sum(1 for t, p in zip(y_true, y_pred) if t == 0 and p == 0)
         fp = sum(1 for t, p in zip(y_true, y_pred) if t == 0 and p == 1)
@@ -136,7 +136,7 @@ def _train_single_fold(model_name, muscle_name, fold_idx,
             }
             best_weights = {k: v.cpu().clone() for k, v in model.state_dict().items()}
 
-    # Guardar pesos del fold
+    # Save the fold weights
     os.makedirs(SAVE_DIR, exist_ok=True)
     pth_path = os.path.join(
         SAVE_DIR, f"{model_name}_{muscle_name.lower()}_fold{fold_idx}_best.pth"
@@ -151,11 +151,11 @@ def _train_single_fold(model_name, muscle_name, fold_idx,
     return best
 
 
-# ── Bucle sobre todos los folds de un (modelo, músculo) ────────────────
+# ── Loop over all folds of a (model, muscle) ───────────────────────────
 def train_kfold_combination(model_name, muscle_name, n_splits=5, device=None):
     """
-    Entrena los `n_splits` folds de una combinación. Devuelve lista de
-    dicts (uno por fold) con métricas y predicciones.
+    Trains the `n_splits` folds of a combination. Returns a list of dicts
+    (one per fold) with metrics and predictions.
     """
     if device is None:
         device = (torch.device("mps") if torch.backends.mps.is_available()
@@ -182,12 +182,12 @@ def train_kfold_combination(model_name, muscle_name, n_splits=5, device=None):
         r["time_s"] = round(time.time() - t0, 1)
         results.append(r)
 
-    # Resumen de la combinación
+    # Summary of the combination
     aucs  = [r["auc"]  for r in results]
     accs  = [r["acc"]  for r in results]
     sens_ = [r["sens"] for r in results]
     specs = [r["spec"] for r in results]
-    print(f"\n  [{model_name} / {muscle_name}] resumen k-fold:")
+    print(f"\n  [{model_name} / {muscle_name}] k-fold summary:")
     print(f"    AUC  = {np.mean(aucs):.2f}% ± {np.std(aucs):.2f}%   "
           f"(folds: {['%.1f' % a for a in aucs]})")
     print(f"    Acc  = {np.mean(accs):.2f}% ± {np.std(accs):.2f}%")
@@ -196,11 +196,11 @@ def train_kfold_combination(model_name, muscle_name, n_splits=5, device=None):
     return results
 
 
-# ── Entrada principal: todas las combinaciones ─────────────────────────
+# ── Main entry point: all combinations ─────────────────────────────────
 def train_kfold_all(muscles=None, model_names=None, n_splits=5):
     """
-    Entrena todas las combinaciones (modelo × músculo) con k-fold CV.
-    Persiste predicciones y resumen en `models/resultados_kfold/`.
+    Trains all (model × muscle) combinations with k-fold CV.
+    Persists predictions and summary in `models/resultados_kfold/`.
     """
     if muscles     is None: muscles     = MUSCLES
     if model_names is None: model_names = MODEL_NAMES
@@ -224,25 +224,25 @@ def train_kfold_all(muscles=None, model_names=None, n_splits=5):
                     model_name, muscle, n_splits=n_splits, device=device
                 )
                 all_results.extend(res)
-                # Guardar JSON incremental — así si algo peta no perdemos nada
+                # Save the JSON incrementally — so that nothing is lost if it crashes
                 _save_predictions_json(all_results)
                 _save_summary_csv(all_results)
             except Exception as e:
                 print(f"[ERROR] {model_name} / {muscle}: {e}")
 
     elapsed = (time.time() - t_start) / 60.0
-    print(f"\n\n===== FINALIZADO en {elapsed:.1f} min =====")
-    print(f"  Predicciones -> {PRED_PATH}")
-    print(f"  Resumen      -> {SUMMARY_PATH}")
+    print(f"\n\n===== FINISHED in {elapsed:.1f} min =====")
+    print(f"  Predictions -> {PRED_PATH}")
+    print(f"  Summary     -> {SUMMARY_PATH}")
     return all_results
 
 
-# ── Persistencia ───────────────────────────────────────────────────────
+# ── Persistence ─────────────────────────────────────────────────────────
 def _save_predictions_json(results):
     """
-    Guarda TODAS las predicciones por fold. Este fichero es la entrada
-    de `statistical_tests.py`. Lo reescribimos cada vez para que sea
-    seguro ante caídas.
+    Saves ALL the per-fold predictions. This file is the input of
+    `statistical_tests.py`. We rewrite it every time so that it is
+    safe against crashes.
     """
     payload = []
     for r in results:
@@ -265,7 +265,7 @@ def _save_predictions_json(results):
 
 def _save_summary_csv(results):
     """
-    Agrega por (modelo, músculo) con media ± std de cada métrica.
+    Aggregates by (model, muscle) with mean ± std of each metric.
     """
     by_combo = {}
     for r in results:
@@ -303,8 +303,8 @@ def _save_summary_csv(results):
 
 # ── Main ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    # OPCIÓN A: todas las combinaciones (largo — ~10x el tiempo de un entrenamiento normal)
+    # OPTION A: all combinations (long — ~10x the time of a normal training run)
     train_kfold_all()
 
-    # OPCIÓN B: prueba rápida con una arquitectura ligera
+    # OPTION B: quick test with a single lightweight architecture
     # train_kfold_all(model_names=["mobilenet_v3"], muscles=["Bicep"])

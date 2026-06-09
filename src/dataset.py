@@ -10,32 +10,32 @@ from config import Config
 # -----------------------------------------------------------------------------
 # Subject identification
 # -----------------------------------------------------------------------------
-# Captura el prefijo alfanumérico del sujeto: "C001", "C026", "RC001", "1001",
-# "1018", etc. Se queda con opcionalmente R, opcionalmente C, y 1-4 dígitos.
-# Es robusto a variaciones de nombre que sí aparecen en el dataset:
+# Captures the subject's alphanumeric prefix: "C001", "C026", "RC001", "1001",
+# "1018", etc. It keeps an optional R, an optional C, and 1-4 digits.
+# It is robust to the naming variations that appear in the dataset:
 #   "C001d_BBr_clean.jpg"  -> "C001"
-#   "C001i_BBr_clean.jpg"  -> "C001"    (mismo sujeto, otro lado)
+#   "C001i_BBr_clean.jpg"  -> "C001"    (same subject, other side)
 #   "RC001d_TbA_clean.jpg" -> "RC001"
 #   "1001d_BBr_clean.jpg"  -> "1001"
-#   "1018_Cdr_clean.jpg"   -> "1018"    (nombre sin letra de lado; Cuádriceps)
-#   "1018d(b)_clean.jpg"   -> "1018"    (segunda toma con paréntesis; Cuádriceps)
-#   "C026_Cdr_clean.jpg"   -> "C026"    (nombre sin letra de lado; Cuádriceps)
+#   "1018_Cdr_clean.jpg"   -> "1018"    (name without a side letter; Quadriceps)
+#   "1018d(b)_clean.jpg"   -> "1018"    (second take with parentheses; Quadriceps)
+#   "C026_Cdr_clean.jpg"   -> "C026"    (name without a side letter; Quadriceps)
 _SUBJECT_RE = re.compile(r"^(R?C?\d+)")
 
 
 def _extract_subject_id(image_path, class_name):
     """
-    Extrae un identificador de sujeto único a partir del nombre de fichero.
+    Extracts a unique subject identifier from the file name.
 
-    El subject_id se prefija con la clase para garantizar que no pueda
-    colisionar entre Control y ELA (defensa en profundidad: aunque la
-    numeración actual ya no colisiona, el código queda más robusto así).
+    The subject_id is prefixed with the class to guarantee that it cannot
+    collide between Control and ALS (defence in depth: although the current
+    numbering no longer collides, this keeps the code more robust).
     """
     filename = os.path.basename(image_path)
     m = _SUBJECT_RE.match(filename)
     if not m:
-        # Fallback: si nunca deberíamos llegar aquí, preservamos el stem
-        # entero para que el assert de no-solape lo detecte.
+        # Fallback: if we should never reach here, keep the whole stem
+        # so that the no-overlap assertion can detect it.
         stem = filename.split("_", 1)[0]
         return f"{class_name}/UNPARSED-{stem}"
     return f"{class_name}/{m.group(1)}"
@@ -46,10 +46,10 @@ def _extract_subject_id(image_path, class_name):
 # -----------------------------------------------------------------------------
 def _get_transforms():
     """
-    Training: augmentation médicamente motivada (horizontal/vertical flip,
-    ligera rotación y color jitter para simular variabilidad de sonda
-    entre hospitales).
-    Validation: solo resize + normalize.
+    Training: medically motivated augmentation (horizontal/vertical flip,
+    slight rotation and color jitter to simulate probe variability across
+    hospitals).
+    Validation: only resize + normalize.
     """
     train_transforms = transforms.Compose([
         transforms.Resize(Config.IMAGE_SIZE),
@@ -76,9 +76,9 @@ def _get_transforms():
 # -----------------------------------------------------------------------------
 def _build_dataset(muscle_name):
     """
-    Crea dos ImageFolder sobre el mismo directorio (misma lista de samples,
-    distintos transforms) y devuelve además los vectores `labels` y
-    `groups` alineados por índice con `samples`.
+    Builds two ImageFolder objects over the same directory (same sample list,
+    different transforms) and also returns the `labels` and `groups` vectors
+    aligned by index with `samples`.
     """
     data_path = Config.PROCESSED_DATA_PATH
     if muscle_name:
@@ -98,11 +98,11 @@ def _build_dataset(muscle_name):
 
 
 def _assert_no_overlap(stage, train_groups, val_groups):
-    """Sanity check: ningún sujeto puede estar simultáneamente en train y val."""
+    """Sanity check: no subject may be in train and val at the same time."""
     train_s, val_s = set(train_groups), set(val_groups)
     overlap = train_s & val_s
-    assert not overlap, f"[{stage}] OVERLAP de sujetos train/val: {overlap}"
-    print(f"  [{stage}] sujetos  train={len(train_s):>3}  val={len(val_s):>3}  "
+    assert not overlap, f"[{stage}] train/val subject OVERLAP: {overlap}"
+    print(f"  [{stage}] subjects  train={len(train_s):>3}  val={len(val_s):>3}  "
           f"overlap={len(overlap)}  OK")
 
 
@@ -111,19 +111,19 @@ def _assert_no_overlap(stage, train_groups, val_groups):
 # -----------------------------------------------------------------------------
 def get_dataloaders(muscle_name=None, train_split=0.8, verbose=True):
     """
-    Loader con split 80/20 **A NIVEL DE SUJETO** (no de imagen).
+    Loader with an 80/20 split **AT THE SUBJECT LEVEL** (not per image).
 
-    Antes usábamos `torch.randperm` sobre las imágenes individuales. Eso
-    provocaba fuga de datos: un paciente con imagen izquierda y derecha
-    podía tener un lado en train y el otro en val, de forma que el
-    modelo aprendía a reconocer al sujeto en vez del patrón de ELA.
-    `GroupShuffleSplit` fija como grupo el `subject_id`, garantizando
-    que todas las imágenes de un mismo paciente caigan juntas.
+    We used to apply `torch.randperm` over individual images. That caused
+    data leakage: a patient with a left and a right image could have one
+    side in train and the other in val, so the model learned to recognise
+    the subject instead of the ALS pattern. `GroupShuffleSplit` fixes the
+    `subject_id` as the group, guaranteeing that all images of the same
+    patient fall together.
 
     Parameters
     ----------
     muscle_name : "Bicep" | "Antebrazo" | "Quadriceps" | "Tibial" | None
-    train_split : fracción de sujetos que van a entrenamiento (default 0.8)
+    train_split : fraction of subjects assigned to training (default 0.8)
 
     Returns
     -------
@@ -162,11 +162,11 @@ def get_dataloaders(muscle_name=None, train_split=0.8, verbose=True):
 
 def get_kfold_splits(muscle_name=None, n_splits=5, verbose=True):
     """
-    Generador de folds con `StratifiedGroupKFold`:
-      - conserva balance de clases (0_Control vs 1_ELA) en cada fold
-      - mantiene los sujetos separados entre train y val de cada fold
+    Fold generator based on `StratifiedGroupKFold`:
+      - preserves the class balance (0_Control vs 1_ELA) in each fold
+      - keeps subjects separated between train and val in every fold
 
-    Para la fase 2 del TFG (cross-validation). Uso:
+    For phase 2 of the thesis (cross-validation). Usage:
 
         for k, (tr, vl, classes) in enumerate(get_kfold_splits("Bicep")):
             train_model(..., train_loader=tr, val_loader=vl)
@@ -201,7 +201,7 @@ def get_kfold_splits(muscle_name=None, n_splits=5, verbose=True):
 
 
 # -----------------------------------------------------------------------------
-# Self-check: python dataset.py  ->  verifica integridad del split
+# Self-check: python dataset.py  ->  verifies the integrity of the split
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
     for muscle in ["Bicep", "Antebrazo", "Quadriceps", "Tibial"]:

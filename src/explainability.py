@@ -1,20 +1,20 @@
 """
 explainability.py
 ─────────────────
-Mapas de explicabilidad (Grad-CAM, Guided Grad-CAM, Saliency, Occlusion)
-para el SISTEMA FINAL del TFG: ResNet-50 entrenado por separado en cada
-uno de los 4 músculos con 5-fold StratifiedGroupKFold.
+Explainability maps (Grad-CAM, Guided Grad-CAM, Saliency, Occlusion)
+for the FINAL SYSTEM of the thesis: ResNet-50 trained separately on each
+of the 4 muscles with 5-fold StratifiedGroupKFold.
 
-Para cada músculo:
-  1. Selecciona el fold con mayor AUC en val (mejor checkpoint).
-  2. Carga los pesos correspondientes desde best_models_kfold/.
-  3. Reconstruye el conjunto de validación de ese fold (mismas seed y
-     particiones que durante entrenamiento).
-  4. Toma 2 imágenes ALS + 2 Control de la val set (out-of-fold honesto:
-     el modelo no las vio en entrenamiento).
-  5. Genera los 4 tipos de mapas y los guarda.
+For each muscle:
+  1. Selects the fold with the highest validation AUC (best checkpoint).
+  2. Loads the corresponding weights from best_models_kfold/.
+  3. Rebuilds the validation set of that fold (same seed and partitions
+     as during training).
+  4. Takes 2 ALS + 2 Control images from the val set (honest out-of-fold:
+     the model did not see them during training).
+  5. Generates the 4 types of maps and saves them.
 
-Salida
+Output
 ------
 models/resultados_kfold/explainability_resnet50/
     gradcam/
@@ -22,7 +22,7 @@ models/resultados_kfold/explainability_resnet50/
     saliency/
     occlusion/
 
-Uso: python3 explainability.py
+Usage: python3 explainability.py
 """
 
 import os
@@ -43,10 +43,10 @@ from config import Config
 from patient_level_fusion import patient_uid
 
 
-# ── Configuración ─────────────────────────────────────────────
-# Sistema final: ResNet-50 en los 4 músculos. Esta selección viene del
-# análisis de fusión a nivel paciente (informe_fusion.txt): ResNet-50
-# fusionado da 99.15% AUC y 98.11% Acc, ganador entre las 5 arquitecturas.
+# ── Configuration ─────────────────────────────────────────────
+# Final system: ResNet-50 on the 4 muscles. It is the architecture adopted
+# as the final system in the patient-level fusion analysis (informe_fusion.txt);
+# the five architectures are statistically equivalent at the fusion level.
 MODEL_NAME = "resnet50"
 MUSCLES    = ["Bicep", "Antebrazo", "Quadriceps", "Tibial"]
 
@@ -56,7 +56,7 @@ PRED_PATH   = os.path.join(Config.BASE_DIR, "models", "resultados_kfold",
 RESULTS_DIR = os.path.join(Config.BASE_DIR, "models", "resultados_kfold",
                            "explainability_resnet50")
 
-# Cuántas imágenes ALS y Control por músculo
+# How many ALS and Control images per muscle
 N_ALS     = 2
 N_CONTROL = 2
 
@@ -72,22 +72,22 @@ TRANSFORM_RAW = transforms.Compose([
 ])
 
 
-# ── Selección del mejor fold por músculo ──────────────────────
+# ── Best-fold-per-muscle selection ────────────────────────────
 def best_fold_for(model_name, muscle, predictions):
-    """De kfold_predictions.json, fold con mayor AUC para (model, muscle)."""
+    """From kfold_predictions.json, the fold with the highest AUC for (model, muscle)."""
     candidates = [r for r in predictions
                   if r["model"] == model_name and r["muscle"] == muscle]
     if not candidates:
-        raise RuntimeError(f"No hay predicciones para {model_name}/{muscle}")
+        raise RuntimeError(f"No predictions for {model_name}/{muscle}")
     best = max(candidates, key=lambda r: r["auc"])
     return best["fold"], best["auc"]
 
 
-# ── Reconstrucción de la val set del fold ─────────────────────
+# ── Rebuild the fold's validation set ─────────────────────────
 def get_val_samples(muscle, fold_idx, n_als=N_ALS, n_ctrl=N_CONTROL):
     """
-    Reconstruye exactamente la val set del fold pedido y devuelve
-    n_als imágenes ELA + n_ctrl Control.
+    Rebuilds exactly the validation set of the requested fold and returns
+    n_als ALS images + n_ctrl Control images.
     """
     data_path = os.path.join(Config.PROCESSED_DATA_PATH, muscle)
     ds_norm   = datasets.ImageFolder(root=data_path, transform=TRANSFORM_NORM)
@@ -103,16 +103,16 @@ def get_val_samples(muscle, fold_idx, n_als=N_ALS, n_ctrl=N_CONTROL):
                                 random_state=Config.SEED)
     folds = list(sgkf.split(X=range(len(ds_norm)), y=labels, groups=groups))
     if fold_idx < 1 or fold_idx > len(folds):
-        raise ValueError(f"Fold {fold_idx} fuera de rango (1..{len(folds)})")
+        raise ValueError(f"Fold {fold_idx} out of range (1..{len(folds)})")
     _, val_idx = folds[fold_idx - 1]
 
-    # Separar índices por clase (label 0=Control, 1=ELA según ImageFolder)
+    # Separate indices by class (label 0=Control, 1=ELA according to ImageFolder)
     by_class = {0: [], 1: []}
     for i in val_idx:
         by_class[labels[i]].append(i)
 
     samples = []
-    # 2 ELA primero, después 2 Control (orden estable: por nombre de archivo)
+    # 2 ALS first, then 2 Control (stable order: by file name)
     for cls_lbl, n, label in [(1, n_als, "ELA"), (0, n_ctrl, "Control")]:
         chosen = sorted(by_class[cls_lbl],
                         key=lambda i: os.path.basename(ds_norm.samples[i][0]))[:n]
@@ -144,7 +144,7 @@ def save_figure(fig, technique, muscle, label, idx):
     path = os.path.join(folder, f"{muscle}_{MODEL_NAME}_{label}_{idx}.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"    Guardado -> {path}")
+    print(f"    Saved -> {path}")
 
 
 def plot_three_panels(img_np, heatmap, title, technique, muscle, label, idx):
@@ -168,7 +168,7 @@ def _get_target_layer(model, model_name):
     if model_name == "efficientnet_b0":         return model.features[-1]
     if model_name == "mobilenet_v3":            return model.features[-1]
     if model_name == "convnext_tiny":           return model.features[-1]
-    raise ValueError(f"Arquitectura no soportada: {model_name}")
+    raise ValueError(f"Unsupported architecture: {model_name}")
 
 
 def _set_relu_inplace(model, value: bool):
@@ -204,7 +204,7 @@ class GradCAM:
 
 
 def run_gradcam(model, samples, muscle):
-    print(f"  · Grad-CAM para {muscle}...")
+    print(f"  · Grad-CAM for {muscle}...")
     device = next(model.parameters()).device
     gc     = GradCAM(model, MODEL_NAME)
     for idx, (tn, tr, label, _) in enumerate(samples):
@@ -245,7 +245,7 @@ class GuidedBackprop:
 
 
 def run_guided_gradcam(model, samples, muscle):
-    print(f"  · Guided Grad-CAM para {muscle}...")
+    print(f"  · Guided Grad-CAM for {muscle}...")
     device = next(model.parameters()).device
     gbp    = GuidedBackprop(model)
     gc     = GradCAM(model, MODEL_NAME)
@@ -268,7 +268,7 @@ def run_guided_gradcam(model, samples, muscle):
 #  3. SALIENCY MAPS
 # ══════════════════════════════════════════════════════════════
 def run_saliency(model, samples, muscle):
-    print(f"  · Saliency Maps para {muscle}...")
+    print(f"  · Saliency Maps for {muscle}...")
     device = next(model.parameters()).device
     for idx, (tn, tr, label, _) in enumerate(samples):
         leaf = make_leaf(tn, device)
@@ -285,7 +285,7 @@ def run_saliency(model, samples, muscle):
 #  4. OCCLUSION
 # ══════════════════════════════════════════════════════════════
 def run_occlusion(model, samples, muscle, patch_size=32, stride=16):
-    print(f"  · Occlusion para {muscle}...")
+    print(f"  · Occlusion for {muscle}...")
     device = next(model.parameters()).device
     H, W   = Config.IMAGE_SIZE
     for idx, (tn, tr, label, _) in enumerate(samples):
@@ -313,12 +313,12 @@ def run_occlusion(model, samples, muscle, patch_size=32, stride=16):
 
 
 # ══════════════════════════════════════════════════════════════
-#  Figura resumen 4×4 (Grad-CAM de los 4 músculos)
+#  Summary figure 4×4 (Grad-CAM of the 4 muscles)
 # ══════════════════════════════════════════════════════════════
 def make_summary_figure(model_per_muscle_samples_hms):
     """
-    Genera una única figura con todos los Grad-CAM en grid 4x4
-    (4 músculos × 4 imágenes: 2 ELA + 2 Control).
+    Generates a single figure with all the Grad-CAM maps in a 4x4 grid
+    (4 muscles × 4 images: 2 ALS + 2 Control).
     """
     fig, axes = plt.subplots(4, 4, figsize=(16, 16))
     for row, muscle in enumerate(MUSCLES):
@@ -331,13 +331,13 @@ def make_summary_figure(model_per_muscle_samples_hms):
             axes[row, col].imshow(overlay)
             axes[row, col].set_title(f"{muscle} — {label}", fontsize=11)
             axes[row, col].axis("off")
-    fig.suptitle(f"Grad-CAM | ResNet-50 | Sistema fusión multi-músculo",
+    fig.suptitle(f"Grad-CAM | ResNet-50 | Multi-muscle fusion system",
                  fontsize=16, fontweight="bold")
     plt.tight_layout()
     path = os.path.join(RESULTS_DIR, "summary_gradcam_4x4.png")
     fig.savefig(path, dpi=150, bbox_inches="tight")
     plt.close(fig)
-    print(f"\nResumen 4×4 -> {path}")
+    print(f"\nSummary 4x4 -> {path}")
 
 
 # ══════════════════════════════════════════════════════════════
@@ -346,17 +346,17 @@ def make_summary_figure(model_per_muscle_samples_hms):
 def run_all():
     device = (torch.device("mps") if torch.backends.mps.is_available()
               else torch.device("cpu"))
-    print(f"Dispositivo: {device}")
-    print(f"Resultados en: {RESULTS_DIR}\n")
+    print(f"Device: {device}")
+    print(f"Results in: {RESULTS_DIR}\n")
 
     if not os.path.exists(PRED_PATH):
         raise FileNotFoundError(
-            f"Falta {PRED_PATH}. Ejecuta primero `python3 train_kfold.py`."
+            f"Missing {PRED_PATH}. Run `python3 train_kfold.py` first."
         )
     with open(PRED_PATH) as f:
         predictions = json.load(f)
 
-    summary_data = {}  # músculo -> [(tensor_raw, hm, label), ...]
+    summary_data = {}  # muscle -> [(tensor_raw, hm, label), ...]
 
     for muscle in MUSCLES:
         fold, auc = best_fold_for(MODEL_NAME, muscle, predictions)
@@ -364,11 +364,11 @@ def run_all():
                            f"{MODEL_NAME}_{muscle.lower()}_fold{fold}_best.pth")
         print(f"\n{'='*70}")
         print(f"  {muscle.upper()}  ·  fold={fold}  ·  AUC val={auc:.2f}%")
-        print(f"  Pesos: {pth}")
+        print(f"  Weights: {pth}")
         print(f"{'='*70}")
 
         if not os.path.exists(pth):
-            print(f"  [SKIP] No existe el .pth")
+            print(f"  [SKIP] .pth does not exist")
             continue
 
         model = get_model(MODEL_NAME).to(device)
@@ -377,7 +377,7 @@ def run_all():
         model.eval()
 
         samples, _, n0, n1 = get_val_samples(muscle, fold)
-        print(f"  Imágenes seleccionadas: {len(samples)} de val "
+        print(f"  Selected images: {len(samples)} from val "
               f"(val total: {n0} Control + {n1} ELA)")
 
         run_gradcam(model, samples, muscle)
@@ -385,7 +385,7 @@ def run_all():
         run_saliency(model, samples, muscle)
         run_occlusion(model, samples, muscle)
 
-        # Para la figura resumen: reusa el primer GradCAM por imagen
+        # For the summary figure: reuse the first GradCAM per image
         gc = GradCAM(model, MODEL_NAME)
         per_muscle = []
         for tn, tr, label, _ in samples:
@@ -396,7 +396,7 @@ def run_all():
     make_summary_figure(summary_data)
 
     print(f"\n{'='*70}")
-    print(f"  EXPLICABILIDAD COMPLETADA  ·  {RESULTS_DIR}")
+    print(f"  EXPLAINABILITY DONE  ·  {RESULTS_DIR}")
     print(f"{'='*70}")
 
 
