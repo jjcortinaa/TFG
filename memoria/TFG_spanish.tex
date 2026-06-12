@@ -213,8 +213,6 @@
 
 \fancyfoot[C]{\thepage}
 
-\blankpage
-
 \subfile{Anexo_I.tex}
 
 \newpage
@@ -243,6 +241,11 @@ Director: \Director
 Entidad colaboradora: Fundaci\'on San Juan de Dios -- ICAI, Universidad Pontificia Comillas
 
 \begin{refsection}[ref_executive_summary.bib]
+% Anclas hyperref únicas para el resumen (evita colisión con el cuerpo al reiniciar contadores)
+\renewcommand{\theHsection}{es.\arabic{section}}
+\renewcommand{\theHfigure}{es.\arabic{figure}}
+\renewcommand{\theHtable}{es.\arabic{table}}
+\renewcommand{\theHequation}{es.\arabic{equation}}
 
 \section*{Resumen}
 La Esclerosis Lateral Amiotr\'ofica (ELA) carece de un biomarcador diagn\'ostico precoz accesible. Este trabajo desarrolla un sistema de aprendizaje profundo que detecta ELA a partir de ecograf\'ia muscular, integrando cuatro grupos musculares en una decisi\'on a nivel paciente. Sobre 52 pacientes, el sistema alcanza un AUC del 98{,}67\,\%, sensibilidad del 100\,\% y especificidad del 92{,}31\,\%, a la altura de la l\'inea base cl\'inica basada en an\'alisis textural cl\'asico.
@@ -362,6 +365,11 @@ Director: \Director
 Collaborating entity: Fundaci\'on San Juan de Dios -- ICAI, Universidad Pontificia Comillas
 
 \begin{refsection}[ref_executive_summary.bib]
+% Anclas hyperref únicas para el executive summary
+\renewcommand{\theHsection}{en.\arabic{section}}
+\renewcommand{\theHfigure}{en.\arabic{figure}}
+\renewcommand{\theHtable}{en.\arabic{table}}
+\renewcommand{\theHequation}{en.\arabic{equation}}
 
 \section*{Abstract}
 Amyotrophic Lateral Sclerosis (ALS) lacks an accessible early diagnostic biomarker. This work develops a deep-learning system that detects ALS from muscle ultrasound, integrating four muscle groups into a patient-level decision. On 52 patients, the system reaches an AUC of 98.67\,\%, a sensitivity of 100\,\% and a specificity of 92.31\,\%, on par with the clinical baseline based on classical textural analysis.
@@ -477,7 +485,6 @@ The main contribution of this work is the multi-muscle integration at the patien
 \renewcommand{\footrulewidth}{0.4pt}
 \setlength{\footskip}{0.8cm}
 
-\newpage
 \selectlanguage{spanish}
 
 \phantomsection
@@ -495,6 +502,11 @@ The main contribution of this work is the multi-muscle integration at the patien
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \resetcounters
+% Restaura anclas hyperref por defecto para el cuerpo del documento
+\renewcommand{\theHsection}{\thesection}
+\renewcommand{\theHfigure}{\thefigure}
+\renewcommand{\theHtable}{\thetable}
+\renewcommand{\theHequation}{\theequation}
 
 
 \begin{refsection}[ref_tfg.bib]
@@ -556,7 +568,7 @@ El uso clínico de la ecointensidad presenta, sin embargo, limitaciones conocida
 
 \subsection{Línea base clínica: análisis textural en la ELA}\label{subsec:linea-base}
 
-El grupo de Martínez-Payá y colaboradores constituye la referencia más directa para este trabajo. En un primer estudio, los autores demostraron que descriptores de textura extraídos de ecografías de músculos de pacientes con ELA permitían diferenciarlos de sujetos sanos, estableciendo que la imagen muscular contiene información discriminante más allá de la ecointensidad media \cite{martinezpaya2017quantitative}. Trabajos posteriores del mismo grupo confirmaron que estos descriptores también reflejan la progresión de la enfermedad a lo largo del tiempo \cite{martinezpaya2018monitoring}. Más recientemente, esta línea de investigación se ha extendido a nuevas cohortes y conjuntos musculares \cite{aljaro2026quantitative}.
+El grupo de Martínez-Payá y colaboradores constituye la referencia más directa para este trabajo. En un primer estudio, los autores demostraron que descriptores de textura extraídos de ecografías de músculos de pacientes con ELA permitían diferenciarlos de sujetos sanos, estableciendo que la imagen muscular contiene información discriminante más allá de la ecointensidad media \cite{martinezpaya2017quantitative}. Trabajos posteriores del mismo grupo confirmaron que estos descriptores también reflejan la progresión de la enfermedad a lo largo del tiempo \cite{martinezpaya2018monitoring}.
 
 Estos trabajos comparten un mismo esquema metodológico: las características de textura se calculan mediante fórmulas estadísticas predefinidas (matrices de coocurrencia, dimensión fractal, descriptores de la transformada wavelet, entre otros) y se seleccionan e introducen después en clasificadores estadísticos clásicos. Este enfoque, que puede denominarse de \textit{ingeniería manual de características}, tiene la ventaja de la interpretabilidad, pero presenta una limitación de fondo: el conjunto de descriptores se fija de antemano y, por tanto, el sistema sólo puede detectar aquellos patrones que el experto ha decidido cuantificar. Cualquier patrón discriminante no contemplado en la batería de fórmulas queda fuera del alcance del modelo. Esta limitación es precisamente la que motiva explorar técnicas capaces de aprender las características relevantes directamente de los datos.
 
@@ -1115,7 +1127,7 @@ Una evaluación responsable de los resultados anteriores debe ponerlos en contex
 
 La limitación más relevante es el \textbf{tamaño y la procedencia única del conjunto de datos}. Los 52 pacientes proceden de un mismo centro y han sido adquiridos con un protocolo y un equipo homogéneos. Aunque la validación cruzada agrupada por sujeto previene la fuga de información dentro de este conjunto, no aporta evidencia sobre la generalización a otras instituciones, otros ecógrafos u otras poblaciones. Un AUC del 98{,}67\,\% sobre 52 pacientes es una estimación con un intervalo de confianza ancho (límite inferior del IC95\,\% \textit{bootstrap} en $95{,}38$\,\%) y debe interpretarse como tal.
 
-La segunda limitación es la \textbf{ausencia de validación externa con una cohorte independiente}. El conjunto disponible se ha agotado en la propia validación cruzada, sin reservar una porción para evaluación final ciega; esa decisión de diseño se justifica por el tamaño muestral, pero implica que el sistema no ha sido contrastado nunca contra datos que no hayan participado en la elección de hiperparámetros y arquitectura.
+La segunda limitación es la \textbf{ausencia de validación externa con una cohorte independiente}. El conjunto disponible se ha agotado en la propia validación cruzada, sin reservar una porción para evaluación final ciega; esa decisión de diseño se justifica por el tamaño muestral, pero implica que el sistema no ha sido contrastado nunca contra datos que no hayan participado en la elección de hiperparámetros y arquitectura. Conviene precisar, además, dos aspectos en los que la estimación por validación cruzada es ligeramente optimista. Por un lado, el \textit{epoch} de cada modelo se selecciona por su AUC sobre el propio \textit{fold} de validación; por otro, el umbral de Youden se calcula sobre las mismas predicciones \textit{out-of-fold} sobre las que después se reportan la sensibilidad y la especificidad. El AUC, al ser independiente del umbral, no se ve afectado por este segundo punto, pero las métricas de operación (sensibilidad, especificidad y exactitud) deben interpretarse como una cota superior del rendimiento esperable sobre datos verdaderamente nuevos. La separación estricta entre la fase de selección y la de evaluación ---ya sea mediante validación cruzada anidada o fijando el umbral únicamente sobre los datos de entrenamiento--- se materializaría de forma natural en la validación externa planteada como trabajo futuro.
 
 La tercera limitación es la \textbf{ausencia de contraste con un radiólogo experto}. Los mapas de explicabilidad demuestran que el modelo se apoya en regiones plausibles, pero esta es una verificación cualitativa: no se ha llevado a cabo una concordancia paciente a paciente entre las decisiones del sistema y el juicio independiente de un especialista, contraste que sería necesario antes de cualquier integración clínica.
 
@@ -1125,7 +1137,7 @@ Finalmente, el sistema produce una probabilidad y una decisión binaria, pero \t
 
 Las limitaciones anteriores sugieren las líneas naturales de continuación del proyecto.
 
-\textbf{Validación externa con una cohorte independiente.} La primera prioridad metodológica es contrastar el sistema con un conjunto de pacientes adquiridos en otra institución y con otro equipo de ecografía. Durante el desarrollo de este trabajo se ha identificado una cohorte adicional compatible con la metodología propuesta \cite{aljaro2026quantitative}; aplicar el modelo ya entrenado a esos datos —sin reentrenar— constituiría la prueba de generalización más exigente y es el siguiente paso inmediato del proyecto.
+\textbf{Validación externa con una cohorte independiente.} La primera prioridad metodológica es contrastar el sistema con un conjunto de pacientes adquiridos en otra institución y con otro equipo de ecografía. Durante el desarrollo de este trabajo se ha tenido conocimiento de una cohorte adicional, adquirida en otra institución y compatible con la metodología propuesta, cuyos datos no se han llegado a incorporar; aplicar el modelo ya entrenado a esa cohorte —sin reentrenar— constituiría la prueba de generalización más exigente y se plantea como el siguiente paso inmediato del proyecto.
 
 \textbf{Calibración y cuantificación de la incertidumbre.} Las probabilidades emitidas por el modelo se han recalibrado mediante el índice de Youden a nivel de umbral, pero no se han calibrado a nivel de distribución; técnicas como la regresión isotónica o el escalado de Platt producirían probabilidades cuya magnitud reflejara la confianza real del modelo, requisito necesario para integrarlo con otras fuentes de información clínica. De forma complementaria, métodos como \textit{deep ensembles} o \textit{Monte Carlo dropout} permitirían acompañar cada decisión de una estimación de incertidumbre por paciente, distinguir los casos rotundos de los marginales y, en último término, recomendar la derivación de los casos dudosos a una segunda lectura humana.
 
