@@ -76,7 +76,6 @@ TFG/
 │   └── TFG_spanish.pdf               Compiled thesis
 │
 ├── .vscode/                          LaTeX Workshop configuration (for reviewers)
-├── TFG_spanish.pdf                   Compiled thesis (copy at the root)
 ├── README.md
 ├── requirements.txt
 └── .gitignore
@@ -88,9 +87,10 @@ TFG/
 > - **Intermediate results** (`models/resultados_kfold/`: predictions, OOF, fusion CSVs and reports).
 > - **Reference papers** (`docs/`): due to copyright.
 >
-> The complete, self-contained package to reproduce the work without retraining
-> (code + `data/processed/` + results + thesis) is delivered separately to the
-> examining committee as a ZIP.
+> This public repository is the deliverable for the source code and the thesis.
+> To reproduce the results without retraining, download the trained weights from
+> the Google Drive link below and place them as `best_models_kfold/`; the patient
+> data are not redistributed for confidentiality reasons.
 
 ---
 
