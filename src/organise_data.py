@@ -54,6 +54,6 @@ def organize_images():
 
 
 if __name__ == "__main__":
-    print("Starting reorganization...")
+    print("Starting reorganization")
     organize_images()
-    print("Done!")
+    print("Done")
