@@ -84,7 +84,7 @@ TFG/
 > **What is NOT included in this repository** (excluded via `.gitignore`):
 > - **Patient data** (`data/`): property of the collaborating medical centre, not redistributable.
 > - **Trained weights** (`best_models_kfold/`, ~5.5 GB): available on Google Drive (see the "Trained weights" section below).
-> - **Intermediate results** (`models/resultados_kfold/`: predictions, OOF, fusion CSVs and reports).
+> - **Intermediate results** (`models/resultados_kfold/`: OOF predictions, fusion CSVs and reports), **except `kfold_predictions.json`** (92 KB, no patient data), which **is** included so that `statistical_tests.py` and `create_figures.py` can be run after a clone without retraining.
 > - **Reference papers** (`docs/`): due to copyright.
 >
 > This public repository is the deliverable for the source code and the thesis.
@@ -101,11 +101,15 @@ their size. They are available on Google Drive:
 
 **https://drive.google.com/drive/folders/1hDHp9OzT3U6jzT9ogTiLIab_jd5rGU96?usp=drive_link**
 
-To reproduce the patient-level fusion and the results **without retraining**,
-download the folder and place it as `best_models_kfold/` at the project root;
-then run `python3 src/patient_level_fusion.py` (and `python3 src/statistical_tests.py`).
-Alternatively, the whole experiment can be regenerated from scratch with
-`python3 src/train_kfold.py` (~6–10 h on Apple Silicon with MPS).
+To reproduce the patient-level fusion **without retraining**, download the
+folder and place it as `best_models_kfold/` at the project root (the dataset is
+also required, since inference is run on the images); then run
+`python3 src/patient_level_fusion.py`. The statistical analysis and the thesis
+figures can be run **directly from the repository**, because
+`kfold_predictions.json` is included: `python3 src/statistical_tests.py` and
+`python3 src/create_figures.py`. Alternatively, the whole experiment can be
+regenerated from scratch with `python3 src/train_kfold.py` (~6–10 h on Apple
+Silicon with MPS).
 
 ---
 
