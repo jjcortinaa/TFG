@@ -209,7 +209,13 @@ __marimo__/
 
 #Excluded information
 /data
-/models
+# Resultados intermedios excluidos, SALVO kfold_predictions.json (92 KB, sin
+# datos de pacientes) para que statistical_tests.py y create_figures.py se
+# puedan ejecutar tras un clon sin reentrenar.
+/models/*
+!/models/resultados_kfold/
+/models/resultados_kfold/*
+!/models/resultados_kfold/kfold_predictions.json
 /best_models
 /best_models_leaky_backup
 /best_models_kfold
