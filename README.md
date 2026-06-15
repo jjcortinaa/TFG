@@ -82,7 +82,7 @@ TFG/
 ```
 
 > **What is NOT included in this repository** (excluded via `.gitignore`):
-> - **Patient data** (`data/`): property of the collaborating medical centre, not redistributable.
+> - **Patient data** (`data/`): property of the collaborating medical centre. It is **not publicly available** and is **not redistributed** here, but it can be provided **upon reasonable request** for replication purposes (please contact the author/supervisor).
 > - **Trained weights** (`best_models_kfold/`, ~5.5 GB): available on Google Drive (see the "Trained weights" section below).
 > - **Intermediate results** (`models/resultados_kfold/`: OOF predictions, fusion CSVs and reports), **except `kfold_predictions.json`** (92 KB, no patient data), which **is** included so that `statistical_tests.py` and `create_figures.py` can be run after a clone without retraining.
 > - **Reference papers** (`docs/`): due to copyright.
